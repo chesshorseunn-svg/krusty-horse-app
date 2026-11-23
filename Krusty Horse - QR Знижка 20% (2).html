@@ -1,0 +1,1256 @@
+<!DOCTYPE html>
+<html lang="uk">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Krusty Horse — Знижка 20% та Доставка</title>
+    <!-- Налаштування для встановлення як справжній додаток на Android / iPhone (PWA) -->
+    <meta name="application-name" content="Krusty Horse">
+    <meta name="apple-mobile-web-app-title" content="Krusty Horse">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <meta name="theme-color" content="#09090b">
+    <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Crect width='100' height='100' rx='24' fill='%2309090b'/%3E%3Cpath d='M75 38c0-8-6-14-14-14-3 0-6 1-8 2.5L43 18v10c-10 2-18 10-20 20l-8 6 6 10 10-2v16h12V66h12v12h12V56c5-3 8-9 8-18z' fill='%23f59e0b'/%3E%3C/svg%3E">
+    <link rel="apple-touch-icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Crect width='100' height='100' rx='24' fill='%2309090b'/%3E%3Cpath d='M75 38c0-8-6-14-14-14-3 0-6 1-8 2.5L43 18v10c-10 2-18 10-20 20l-8 6 6 10 10-2v16h12V66h12v12h12V56c5-3 8-9 8-18z' fill='%23f59e0b'/%3E%3C/svg%3E">
+    <!-- Підключення Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Шрифт Inter -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
+    <style>
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: #09090b;
+            color: #fafafa;
+            -webkit-tap-highlight-color: transparent;
+        }
+        .no-scrollbar::-webkit-scrollbar {
+            display: none;
+        }
+        .no-scrollbar {
+            -ms-overflow-style: none;
+            scrollbar-width: none;
+        }
+        #qrCanvas {
+            width: 196px;
+            height: 196px;
+            image-rendering: pixelated;
+            image-rendering: crisp-edges;
+            display: block;
+        }
+    </style>
+</head>
+<body class="min-h-screen flex flex-col items-center justify-between p-4 sm:p-6 select-none">
+
+    <!-- Верхня панель навігації з розмежуванням доступу -->
+    <header class="w-full max-w-md flex items-center justify-between pt-1 pb-4 gap-2">
+        <div class="flex items-center gap-2">
+            <span class="w-2.5 h-2.5 rounded-full bg-emerald-500 animate-pulse shrink-0"></span>
+            <span class="text-xs font-semibold tracking-wider uppercase text-zinc-400 leading-tight">Krusty<br>Horse</span>
+        </div>
+
+        <div class="flex items-center gap-2">
+            <!-- Кнопка для клієнта: бачить ТІЛЬКИ свої замовлення -->
+            <button type="button" onclick="openClientOrdersModal()" class="relative flex items-center gap-1.5 bg-zinc-900 hover:bg-zinc-800 border border-zinc-800 active:scale-95 transition-all px-3 py-2 rounded-2xl shadow-md">
+                <svg width="16" height="16" class="w-4 h-4 text-emerald-400 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4"/>
+                </svg>
+                <span class="text-xs font-bold text-zinc-200">Мої замовлення</span>
+                <span id="clientOrderBadge" class="hidden bg-emerald-500 text-zinc-950 text-[10px] font-black px-1.5 py-0.5 rounded-full">0</span>
+            </button>
+
+            <!-- Кнопка Чат для власника (захищена PIN-кодом 8531, або пасхалкою 6767) -->
+            <button type="button" onclick="handleAdminChatClick()" class="relative flex items-center gap-1.5 bg-zinc-900 hover:bg-zinc-800 border border-amber-500/40 active:scale-95 transition-all px-3 py-2 rounded-2xl shadow-lg">
+                <svg id="adminLockIcon" width="15" height="15" class="w-3.5 h-3.5 text-amber-400 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"/>
+                </svg>
+                <span class="text-xs font-bold text-zinc-100">Чат</span>
+                <span id="adminOrderBadge" class="bg-amber-500 text-zinc-950 text-[11px] font-black px-1.5 py-0.5 rounded-full min-w-[20px] text-center">0</span>
+            </button>
+        </div>
+    </header>
+
+    <!-- Основний контент: Купон + Меню -->
+    <div class="w-full max-w-md space-y-4">
+        <!-- Головна картка купона -->
+        <main class="w-full bg-zinc-900/90 border border-zinc-800/80 rounded-3xl overflow-hidden shadow-2xl">
+            
+            <!-- Фірмова шапка картки -->
+            <div id="couponHeaderBg" class="bg-gradient-to-br from-amber-500 via-orange-500 to-amber-600 p-6 text-zinc-950 relative overflow-hidden transition-all duration-500">
+                <div class="flex items-center justify-between relative z-10">
+                    <div class="flex items-center gap-3">
+                        <div class="w-12 h-12 bg-zinc-950 rounded-2xl flex items-center justify-center shadow-lg shrink-0">
+                            <svg id="couponHorseIcon" width="26" height="26" class="w-6 h-6 text-amber-400 transition-colors" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+                                <path d="M19 9c0-2-1.5-3.5-3.5-3.5-.7 0-1.4.2-2 .6L11 4v2.5c-2.5.5-4.5 2.5-5 5L4 13l1.5 2.5L8 15v4h3v-3h3v3h3v-5.5c1.2-.8 2-2.2 2-3.5z"/>
+                                <circle cx="15.5" cy="8.5" r="0.8" fill="currentColor"/>
+                            </svg>
+                        </div>
+                        <div>
+                            <p id="couponPassLabel" class="text-[11px] font-extrabold uppercase tracking-widest opacity-80">Club Pass</p>
+                            <h1 class="text-xl font-black tracking-tight leading-none">KRUSTY HORSE</h1>
+                        </div>
+                    </div>
+                    <div id="discountBadge" class="bg-zinc-950 text-amber-400 px-3.5 py-1.5 rounded-2xl font-black text-xl tracking-tight shadow-md shrink-0 transition-colors">
+                        -20%
+                    </div>
+                </div>
+            </div>
+
+            <!-- Тіло картки з QR-кодом -->
+            <div class="p-6 text-center space-y-5">
+                <div>
+                    <p class="text-sm text-zinc-400">
+                        Покажіть цей QR-код на касі магазину <span class="text-zinc-100 font-semibold">Krusty Horse</span> або замовте позиції з меню нижче
+                    </p>
+                </div>
+
+                <!-- Контейнер QR-коду (нативний Canvas рендер — працює 100% скрізь без інтернету) -->
+                <div class="relative mx-auto w-56 h-56 bg-white p-3.5 rounded-3xl shadow-[0_0_40px_rgba(245,158,11,0.18)] flex items-center justify-center">
+                    <canvas id="qrCanvas" width="196" height="196"></canvas>
+                </div>
+
+                <!-- Таймер дійсності коду -->
+                <div class="flex items-center justify-center gap-2 text-xs text-zinc-400 bg-zinc-950/60 py-2 px-4 rounded-full w-fit mx-auto border border-zinc-800/80">
+                    <span>Оновлення коду через:</span>
+                    <span id="timer" class="font-mono font-bold text-amber-400">15:00</span>
+                    <button type="button" onclick="refreshCoupon()" title="Оновити код" class="ml-1 text-zinc-400 hover:text-white transition-colors p-0.5">
+                        <svg width="14" height="14" class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"/>
+                        </svg>
+                    </button>
+                </div>
+
+                <!-- Резервний текстовий код -->
+                <div class="bg-zinc-950/80 border border-zinc-800 rounded-2xl p-3.5 flex items-center justify-between">
+                    <div class="text-left">
+                        <p class="text-[10px] uppercase tracking-wider text-zinc-500 font-semibold">Резервний промокод</p>
+                        <p id="promoText" class="font-mono text-base font-bold tracking-wider text-zinc-100">KH20-8492</p>
+                    </div>
+                    <button type="button" onclick="copyPromoCode()" class="bg-zinc-800 hover:bg-zinc-700 active:scale-95 transition-all text-zinc-200 px-3.5 py-2 rounded-xl text-xs font-semibold flex items-center gap-1.5">
+                        <svg width="16" height="16" class="w-4 h-4 text-amber-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z"/>
+                        </svg>
+                        <span>Копіювати</span>
+                    </button>
+                </div>
+            </div>
+        </main>
+
+        <!-- Секція Меню закладу -->
+        <section class="w-full bg-zinc-900/90 border border-zinc-800/80 rounded-3xl p-5 shadow-2xl space-y-3.5">
+            <div class="flex items-center justify-between">
+                <div>
+                    <h2 class="text-base font-extrabold text-white tracking-tight">Меню Krusty Horse</h2>
+                    <p id="menuSubtitle" class="text-[11px] text-zinc-400">Доступно для замовлення на доставку зі знижкою 20%</p>
+                </div>
+                <span class="bg-amber-500/15 text-amber-400 border border-amber-500/30 text-[11px] font-bold px-2.5 py-1 rounded-xl">5 позицій</span>
+            </div>
+
+            <div id="mainMenuList" class="space-y-2.5"></div>
+        </section>
+    </div>
+
+    <!-- Нижні кнопки дій -->
+    <footer class="w-full max-w-md pt-4 pb-2 space-y-2.5">
+        <button type="button" onclick="openDeliveryModal()" class="w-full py-3.5 px-5 rounded-2xl bg-gradient-to-r from-amber-500 to-orange-500 hover:from-amber-400 hover:to-orange-400 active:scale-[0.98] transition-all text-zinc-950 font-extrabold text-sm flex items-center justify-center gap-2 shadow-lg shadow-amber-500/20">
+            <svg width="20" height="20" class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.2" d="M13 16V6a1 1 0 00-1-1H4a1 1 0 00-1 1v10a1 1 0 001 1h1m8-1a1 1 0 01-1 1H9m4-1V8a1 1 0 011-1h2.586a1 1 0 01.707.293l3.414 3.414a1 1 0 01.293.707V16a1 1 0 01-1 1h-1m-6-1a1 1 0 001 1h1M5 17a2 2 0 104 0m-4 0a2 2 0 114 0m6 0a2 2 0 104 0m-4 0a2 2 0 114 0"/>
+            </svg>
+            <span id="deliveryFooterBtnText">Замовити доставку з меню (-20%)</span>
+        </button>
+
+        <!-- Кнопка швидкого дзвінка в магазин -->
+        <a id="callStoreLink" href="tel:0966591081" onclick="handlePhoneClick(event)" class="w-full py-3 px-5 rounded-2xl bg-zinc-900 hover:bg-zinc-800 border border-zinc-800 active:scale-[0.98] transition-all text-zinc-100 font-bold text-sm flex items-center justify-center gap-2 shadow-md cursor-pointer no-underline">
+            <svg width="18" height="18" class="w-4 h-4 text-emerald-400 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.2" d="M3 5a2 2 0 012-2h3.28a1 1 0 01.948.684l1.498 4.493a1 1 0 01-.502 1.21l-2.257 1.13a11.042 11.042 0 005.516 5.516l1.13-2.257a1 1 0 011.21-.502l4.493 1.498a1 1 0 01.684.949V19a2 2 0 01-2 2h-1C9.716 21 3 14.284 3 6V5z"/>
+            </svg>
+            <span>Зателефонувати • 096 659 10 81</span>
+        </a>
+    </footer>
+
+    <!-- МОДАЛЬНЕ ВІКНО 1: Оформлення доставки клієнтом (ТІЛЬКИ позиції з меню) -->
+    <div id="deliveryModal" class="fixed inset-0 bg-black/80 backdrop-blur-sm z-50 hidden items-center justify-center p-4">
+        <div class="bg-zinc-900 border border-zinc-800 rounded-3xl max-w-md w-full max-h-[90vh] flex flex-col overflow-hidden shadow-2xl">
+            <div class="p-5 border-b border-zinc-800 flex items-center justify-between shrink-0">
+                <div class="flex items-center gap-2.5">
+                    <div class="w-10 h-10 rounded-2xl bg-amber-500/20 text-amber-400 flex items-center justify-center">
+                        <svg width="20" height="20" class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 8h14M5 8a2 2 0 110-4h14a2 2 0 110 4M5 8v10a2 2 0 002 2h10a2 2 0 002-2V8m-9 4h4"/>
+                        </svg>
+                    </div>
+                    <div>
+                        <h3 class="text-lg font-extrabold text-white">Замовити доставку</h3>
+                        <p id="modalDiscountSubtitle" class="text-xs text-emerald-400 font-semibold">Оберіть позиції з меню • Знижка -20%</p>
+                    </div>
+                </div>
+                <button type="button" onclick="closeDeliveryModal()" class="w-8 h-8 rounded-full bg-zinc-800 hover:bg-zinc-700 text-zinc-400 flex items-center justify-center">✕</button>
+            </div>
+
+            <form onsubmit="submitDeliveryRequest(event)" class="flex-1 overflow-y-auto p-5 space-y-4 no-scrollbar">
+                <div>
+                    <div class="flex items-center justify-between mb-2">
+                        <label class="block text-xs font-semibold text-zinc-300">Оберіть страви та напої з меню:</label>
+                        <span class="text-[11px] text-zinc-500">Інші товари недоступні</span>
+                    </div>
+                    <div id="modalMenuPicker" class="space-y-2"></div>
+                </div>
+
+                <!-- Підсумок замовлення -->
+                <div class="bg-zinc-950 border border-zinc-800 rounded-2xl p-3.5 flex items-center justify-between">
+                    <div>
+                        <p id="orderTotalLabel" class="text-[11px] text-zinc-400">До сплати зі знижкою 20%:</p>
+                        <div class="flex items-baseline gap-2">
+                            <span id="orderTotalDiscounted" class="text-lg font-black text-amber-400">0 грн</span>
+                            <span id="orderTotalOriginal" class="text-xs text-zinc-500 line-through hidden">0 грн</span>
+                        </div>
+                    </div>
+                    <span id="orderItemsCountBadge" class="text-xs font-bold text-zinc-300 bg-zinc-900 border border-zinc-800 px-3 py-1.5 rounded-xl">0 шт.</span>
+                </div>
+
+                <div>
+                    <label class="block text-xs font-semibold text-zinc-400 mb-1.5">Адреса або відділення пошти</label>
+                    <input id="deliveryAddressInput" required type="text" placeholder="м. Львів, вул. Франка 15 або НП №5" class="w-full bg-zinc-950 border border-zinc-800 focus:border-amber-500 rounded-2xl p-3 text-sm text-white placeholder-zinc-600 outline-none">
+                </div>
+
+                <div>
+                    <label class="block text-xs font-semibold text-zinc-400 mb-1.5">Ваш телефон або нік у Telegram</label>
+                    <input id="deliveryContactInput" required type="text" placeholder="+380... або @username" class="w-full bg-zinc-950 border border-zinc-800 focus:border-amber-500 rounded-2xl p-3 text-sm text-white placeholder-zinc-600 outline-none">
+                </div>
+
+                <button id="submitOrderBtn" type="submit" class="w-full py-3.5 rounded-2xl bg-amber-500 hover:bg-amber-400 active:scale-[0.98] transition-all text-zinc-950 font-extrabold text-sm shadow-lg">
+                    Надіслати замовлення
+                </button>
+            </form>
+        </div>
+    </div>
+
+    <!-- МОДАЛЬНЕ ВІКНО 2: Мої замовлення (Тільки особисті повідомлення клієнта) -->
+    <div id="clientOrdersModal" class="fixed inset-0 bg-black/80 backdrop-blur-sm z-50 hidden items-center justify-center p-4">
+        <div class="bg-zinc-900 border border-zinc-800 rounded-3xl max-w-md w-full h-[75vh] flex flex-col overflow-hidden shadow-2xl">
+            <div class="p-5 border-b border-zinc-800 flex items-center justify-between shrink-0">
+                <div>
+                    <h3 class="text-lg font-extrabold text-white">Мої замовлення</h3>
+                    <p class="text-xs text-zinc-400">Тут видно лише ваші запити</p>
+                </div>
+                <button type="button" onclick="closeClientOrdersModal()" class="w-8 h-8 rounded-full bg-zinc-800 hover:bg-zinc-700 text-zinc-400 flex items-center justify-center">✕</button>
+            </div>
+            <div id="clientOrdersList" class="flex-1 overflow-y-auto p-4 space-y-3 no-scrollbar"></div>
+        </div>
+    </div>
+
+    <!-- МОДАЛЬНЕ ВІКНО 3: Вхід власника за PIN-кодом (8531) або секретним кодом пасхалки (6767) -->
+    <div id="adminPinModal" class="fixed inset-0 bg-black/85 backdrop-blur-md z-50 hidden items-center justify-center p-4">
+        <div class="bg-zinc-900 border border-zinc-800 rounded-3xl max-w-sm w-full p-6 text-center shadow-2xl space-y-4">
+            <div class="w-14 h-14 bg-amber-500/20 text-amber-400 rounded-2xl flex items-center justify-center mx-auto">
+                <svg width="28" height="28" class="w-7 h-7" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"/>
+                </svg>
+            </div>
+            <div>
+                <h3 class="text-lg font-extrabold text-white">Доступ лише для власника</h3>
+                <p class="text-xs text-zinc-400 mt-1">Введіть PIN-код один раз, щоб запам'ятати цей пристрій</p>
+            </div>
+
+            <form onsubmit="verifyAdminPin(event)" class="space-y-3">
+                <input id="adminPinInput" type="password" inputmode="numeric" maxlength="6" placeholder="••••" class="w-full bg-zinc-950 border border-zinc-800 focus:border-amber-500 rounded-2xl py-3 px-4 text-center text-xl font-mono tracking-[0.4em] text-white outline-none">
+                <div class="flex gap-2">
+                    <button type="button" onclick="closeAdminPinModal()" class="flex-1 py-3 rounded-2xl bg-zinc-800 text-zinc-300 font-bold text-xs">Скасувати</button>
+                    <button type="submit" class="flex-1 py-3 rounded-2xl bg-amber-500 text-zinc-950 font-extrabold text-xs">Увійти</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- МОДАЛЬНЕ ВІКНО 4: Чат власника (Усі замовлення клієнтів) -->
+    <div id="adminChatModal" class="fixed inset-0 bg-black/80 backdrop-blur-sm z-50 hidden items-center justify-center p-4">
+        <div class="bg-zinc-900 border border-zinc-800 rounded-3xl max-w-md w-full h-[80vh] flex flex-col overflow-hidden shadow-2xl">
+            <div class="p-5 border-b border-zinc-800 flex items-center justify-between shrink-0">
+                <div>
+                    <h3 class="text-lg font-extrabold text-white">Усі замовлення (Адмін)</h3>
+                    <p id="cloudSyncStatus" class="text-xs text-amber-400">Підключення до хмари Krusty Horse...</p>
+                </div>
+                <div class="flex items-center gap-1.5">
+                    <button type="button" onclick="toggleCloudSettings()" title="Налаштувати хмару для всіх телефонів" class="w-8 h-8 rounded-xl bg-zinc-800 hover:bg-zinc-700 text-zinc-300 flex items-center justify-center text-sm">⚙</button>
+                    <button type="button" onclick="logoutAdmin()" title="Заблокувати доступ" class="px-2.5 py-1.5 rounded-xl bg-zinc-800 hover:bg-zinc-700 text-[11px] font-bold text-amber-400">Вийти</button>
+                    <button type="button" onclick="closeAdminChatModal()" class="w-8 h-8 rounded-full bg-zinc-800 hover:bg-zinc-700 text-zinc-400 flex items-center justify-center">✕</button>
+                </div>
+            </div>
+
+            <!-- Панель підключення хмарної бази (Firebase) для прийому замовлень з різних телефонів -->
+            <div id="cloudSettingsBox" class="hidden p-4 bg-zinc-950 border-b border-zinc-800 space-y-2.5 shrink-0">
+                <p class="text-xs font-bold text-white">Підключення хмари (проєкт krusty-horse підключено автоматично):</p>
+                <p class="text-[11px] text-zinc-400 leading-relaxed">За потреби можете замінити <span class="text-amber-400 font-mono">firebaseConfig</span> нижче:</p>
+                <textarea id="firebaseConfigInput" rows="3" placeholder='{"apiKey":"...","authDomain":"...","projectId":"..."}' class="w-full bg-zinc-900 border border-zinc-800 rounded-xl p-2 text-[11px] font-mono text-zinc-200 outline-none resize-none"></textarea>
+                <div class="flex gap-2">
+                    <button type="button" onclick="saveFirebaseConfig()" class="flex-1 py-2 rounded-xl bg-emerald-500 text-zinc-950 font-bold text-xs">Зберегти та підключити</button>
+                    <button type="button" onclick="toggleCloudSettings()" class="px-3 py-2 rounded-xl bg-zinc-800 text-zinc-300 text-xs">Закрити</button>
+                </div>
+            </div>
+
+            <div id="adminChatMessagesList" class="flex-1 overflow-y-auto p-4 space-y-3 no-scrollbar"></div>
+
+            <form onsubmit="sendOwnerNote(event)" class="p-3.5 border-t border-zinc-800 bg-zinc-950/60 flex gap-2 shrink-0">
+                <input id="ownerNoteInput" type="text" placeholder="Нотатка кур'єра або статус..." class="flex-1 bg-zinc-900 border border-zinc-800 focus:border-amber-500 rounded-2xl px-3.5 py-2.5 text-xs text-white placeholder-zinc-500 outline-none">
+                <button type="submit" class="bg-amber-500 hover:bg-amber-400 text-zinc-950 font-bold text-xs px-4 py-2.5 rounded-2xl shrink-0">
+                    Надіслати
+                </button>
+            </form>
+        </div>
+    </div>
+
+    <!-- Спливаюче сповіщення (Toast) -->
+    <div id="toast" class="fixed bottom-6 left-1/2 -translate-x-1/2 bg-zinc-800 text-white text-xs font-semibold px-4 py-2.5 rounded-full shadow-xl border border-zinc-700 opacity-0 pointer-events-none transition-opacity duration-300 z-50 whitespace-nowrap">
+        Повідомлення
+    </div>
+
+    <!-- Звичайний скрипт (працює миттєво навіть в офлайн та в пісочниці без модулів) -->
+    <script>
+        // Секретний PIN-код власника та код пасхалки на 25% знижки
+        const OWNER_PIN = '8531';
+        const EASTER_EGG_PIN = '6767';
+        let isAdminUnlocked = false;
+        let discountPercent = 20;
+
+        // Багаторівневе сховище для синхронізації між вкладками та збереження сесії
+        const memoryStorage = {};
+        function getWindowNameData() {
+            try {
+                return window.name && window.name.startsWith('{') ? JSON.parse(window.name) : {};
+            } catch (e) {
+                return {};
+            }
+        }
+        function setWindowNameData(obj) {
+            try {
+                window.name = JSON.stringify(obj);
+            } catch (e) {}
+        }
+
+        function safeGetStorage(key) {
+            try {
+                const val = localStorage.getItem(key);
+                if (val !== null) return val;
+            } catch (e) {}
+            try {
+                const val = sessionStorage.getItem(key);
+                if (val !== null) return val;
+            } catch (e) {}
+            const wn = getWindowNameData();
+            if (wn[key] !== undefined) return wn[key];
+            return memoryStorage[key] || null;
+        }
+
+        function safeSetStorage(key, value) {
+            memoryStorage[key] = value;
+            try { localStorage.setItem(key, value); } catch (e) {}
+            try { sessionStorage.setItem(key, value); } catch (e) {}
+            const wn = getWindowNameData();
+            wn[key] = value;
+            setWindowNameData(wn);
+        }
+
+        if (safeGetStorage('kh_easter_egg_25') === 'true') {
+            discountPercent = 25;
+        }
+
+        function applyDiscountTheme() {
+            const headerBg = document.getElementById('couponHeaderBg');
+            const badge = document.getElementById('discountBadge');
+            const horseIcon = document.getElementById('couponHorseIcon');
+            const passLabel = document.getElementById('couponPassLabel');
+            const menuSubtitle = document.getElementById('menuSubtitle');
+            const modalSubtitle = document.getElementById('modalDiscountSubtitle');
+            const totalLabel = document.getElementById('orderTotalLabel');
+
+            if (discountPercent === 25) {
+                if (headerBg) headerBg.className = 'bg-gradient-to-br from-emerald-400 via-teal-500 to-amber-500 p-6 text-zinc-950 relative overflow-hidden transition-all duration-500';
+                if (badge) {
+                    badge.textContent = '-25%';
+                    badge.className = 'bg-zinc-950 text-emerald-400 px-3.5 py-1.5 rounded-2xl font-black text-xl tracking-tight shadow-md shrink-0 transition-colors';
+                }
+                if (horseIcon) horseIcon.className = 'w-6 h-6 text-emerald-400 transition-colors';
+                if (passLabel) passLabel.textContent = 'SECRET VIP PASS ★';
+                if (menuSubtitle) menuSubtitle.textContent = 'Активовано пасхалку! Знижка 25% на все меню';
+                if (modalSubtitle) modalSubtitle.textContent = 'Оберіть позиції з меню • VIP Знижка -25%';
+                if (totalLabel) totalLabel.textContent = 'До сплати зі знижкою 25%:';
+            } else {
+                if (headerBg) headerBg.className = 'bg-gradient-to-br from-amber-500 via-orange-500 to-amber-600 p-6 text-zinc-950 relative overflow-hidden transition-all duration-500';
+                if (badge) {
+                    badge.textContent = '-20%';
+                    badge.className = 'bg-zinc-950 text-amber-400 px-3.5 py-1.5 rounded-2xl font-black text-xl tracking-tight shadow-md shrink-0 transition-colors';
+                }
+                if (horseIcon) horseIcon.className = 'w-6 h-6 text-amber-400 transition-colors';
+                if (passLabel) passLabel.textContent = 'Club Pass';
+                if (menuSubtitle) menuSubtitle.textContent = 'Доступно для замовлення на доставку зі знижкою 20%';
+                if (modalSubtitle) modalSubtitle.textContent = 'Оберіть позиції з меню • Знижка -20%';
+                if (totalLabel) totalLabel.textContent = 'До сплати зі знижкою 20%:';
+            }
+        }
+
+        // Офіційне меню Krusty Horse
+        const MENU_ITEMS = [
+            { id: 'coffee', name: 'Кава', desc: 'Свіжозмелена ароматна кава', price: 65, icon: '☕' },
+            { id: 'tea', name: 'Чай', desc: 'Гарячий запашний чай на вибір', price: 50, icon: '🍵' },
+            { id: 'toasts', name: 'Тости', desc: 'Хрусткі підсмажені тости', price: 75, icon: '🥪' },
+            { id: 'kakashky', name: 'Какашки', desc: 'Фірмовий десерт Krusty Horse', price: 85, icon: '💩' },
+            { id: 'bread', name: 'Хліб', desc: 'Свіжа випічка з хрусткою скоринкою', price: 40, icon: '🍞' }
+        ];
+
+        const selectedMenuCart = {};
+
+        function getDiscountMultiplier() {
+            return (100 - discountPercent) / 100;
+        }
+
+        function renderMenuUI() {
+            applyDiscountTheme();
+            const mainList = document.getElementById('mainMenuList');
+            const modalPicker = document.getElementById('modalMenuPicker');
+            const mult = getDiscountMultiplier();
+
+            let totalQty = 0;
+            let totalOriginal = 0;
+            let totalDiscounted = 0;
+
+            MENU_ITEMS.forEach(item => {
+                const qty = selectedMenuCart[item.id] || 0;
+                const itemDiscountedPrice = Math.round(item.price * mult);
+                totalQty += qty;
+                totalOriginal += qty * item.price;
+                totalDiscounted += qty * itemDiscountedPrice;
+            });
+
+            if (mainList) {
+                mainList.innerHTML = MENU_ITEMS.map(item => {
+                    const qty = selectedMenuCart[item.id] || 0;
+                    const discountedPrice = Math.round(item.price * mult);
+                    return `
+                        <div class="bg-zinc-950/90 border ${qty > 0 ? 'border-amber-500/50' : 'border-zinc-800/90'} rounded-2xl p-3 flex items-center justify-between gap-3 transition-colors">
+                            <div class="flex items-center gap-3 min-w-0">
+                                <div class="w-10 h-10 rounded-xl bg-zinc-900 border border-zinc-800 flex items-center justify-center text-lg shrink-0">
+                                    ${item.icon}
+                                </div>
+                                <div class="min-w-0">
+                                    <p class="text-sm font-bold text-white truncate">${escapeHtml(item.name)}</p>
+                                    <div class="flex items-center gap-1.5 text-xs">
+                                        <span class="font-extrabold ${discountPercent === 25 ? 'text-emerald-400' : 'text-amber-400'}">${discountedPrice} грн</span>
+                                        <span class="text-zinc-500 line-through text-[11px]">${item.price} грн</span>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="flex items-center gap-1.5 shrink-0">
+                                ${qty > 0 ? `
+                                    <button type="button" onclick="changeMenuQty('${item.id}', -1)" class="w-8 h-8 rounded-xl bg-zinc-800 hover:bg-zinc-700 active:scale-95 text-white font-bold flex items-center justify-center">−</button>
+                                    <span class="w-6 text-center text-xs font-extrabold text-amber-400">${qty}</span>
+                                    <button type="button" onclick="changeMenuQty('${item.id}', 1)" class="w-8 h-8 rounded-xl bg-amber-500 hover:bg-amber-400 active:scale-95 text-zinc-950 font-black flex items-center justify-center">+</button>
+                                ` : `
+                                    <button type="button" onclick="changeMenuQty('${item.id}', 1)" class="px-3 py-1.5 rounded-xl bg-zinc-800 hover:bg-zinc-700 active:scale-95 text-xs font-bold text-zinc-200 border border-zinc-700/70">
+                                        + Додати
+                                    </button>
+                                `}
+                            </div>
+                        </div>
+                    `;
+                }).join('');
+            }
+
+            if (modalPicker) {
+                modalPicker.innerHTML = MENU_ITEMS.map(item => {
+                    const qty = selectedMenuCart[item.id] || 0;
+                    const discountedPrice = Math.round(item.price * mult);
+                    return `
+                        <div class="bg-zinc-950 border ${qty > 0 ? 'border-amber-500/60' : 'border-zinc-800'} rounded-2xl p-2.5 flex items-center justify-between gap-2">
+                            <div class="flex items-center gap-2.5 min-w-0">
+                                <span class="text-base shrink-0">${item.icon}</span>
+                                <div class="min-w-0">
+                                    <p class="text-xs font-bold text-white truncate">${escapeHtml(item.name)}</p>
+                                    <p class="text-[11px] ${discountPercent === 25 ? 'text-emerald-400' : 'text-amber-400'} font-semibold">${discountedPrice} грн <span class="text-zinc-500 line-through">${item.price} грн</span></p>
+                                </div>
+                            </div>
+                            <div class="flex items-center gap-1.5 shrink-0">
+                                <button type="button" onclick="changeMenuQty('${item.id}', -1)" class="w-7 h-7 rounded-lg bg-zinc-800 hover:bg-zinc-700 text-zinc-200 font-bold text-sm flex items-center justify-center">−</button>
+                                <span class="w-6 text-center text-xs font-extrabold ${qty > 0 ? 'text-amber-400' : 'text-zinc-500'}">${qty}</span>
+                                <button type="button" onclick="changeMenuQty('${item.id}', 1)" class="w-7 h-7 rounded-lg bg-amber-500 hover:bg-amber-400 text-zinc-950 font-black text-sm flex items-center justify-center">+</button>
+                            </div>
+                        </div>
+                    `;
+                }).join('');
+            }
+
+            const footerBtnText = document.getElementById('deliveryFooterBtnText');
+            if (footerBtnText) {
+                footerBtnText.textContent = totalQty > 0
+                    ? `Оформити доставку (${totalQty} шт. • ${totalDiscounted} грн)`
+                    : `Замовити доставку з меню (-${discountPercent}%)`;
+            }
+
+            const totalDiscEl = document.getElementById('orderTotalDiscounted');
+            const totalOrigEl = document.getElementById('orderTotalOriginal');
+            const countBadgeEl = document.getElementById('orderItemsCountBadge');
+
+            if (totalDiscEl) totalDiscEl.textContent = `${totalDiscounted} грн`;
+            if (totalOrigEl) {
+                if (totalOriginal > 0) {
+                    totalOrigEl.textContent = `${totalOriginal} грн`;
+                    totalOrigEl.classList.remove('hidden');
+                } else {
+                    totalOrigEl.classList.add('hidden');
+                }
+            }
+            if (countBadgeEl) countBadgeEl.textContent = `${totalQty} шт.`;
+        }
+
+        function changeMenuQty(itemId, delta) {
+            const exists = MENU_ITEMS.find(m => m.id === itemId);
+            if (!exists) return;
+            const current = selectedMenuCart[itemId] || 0;
+            const next = Math.max(0, current + delta);
+            if (next === 0) {
+                delete selectedMenuCart[itemId];
+            } else {
+                selectedMenuCart[itemId] = next;
+            }
+            renderMenuUI();
+        }
+
+        // 100% автономний математичний генератор QR-коду (версія 3, 29x29 модулів) + Canvas рендер
+        const RealQR = (function() {
+            const EXP = new Uint8Array(512), LOG = new Uint8Array(256);
+            let x = 1;
+            for (let i = 0; i < 255; i++) {
+                EXP[i] = x; LOG[x] = i;
+                x = (x << 1) ^ (x & 128 ? 0x11d : 0);
+            }
+            for (let i = 255; i < 512; i++) EXP[i] = EXP[i - 255];
+
+            function gfMul(a, b) {
+                return (a === 0 || b === 0) ? 0 : EXP[LOG[a] + LOG[b]];
+            }
+
+            function rsGenPoly(deg) {
+                let poly = [1];
+                for (let i = 0; i < deg; i++) {
+                    const next = new Array(poly.length + 1).fill(0);
+                    for (let j = 0; j < poly.length; j++) {
+                        next[j] ^= poly[j];
+                        next[j + 1] ^= gfMul(poly[j], EXP[i]);
+                    }
+                    poly = next;
+                }
+                return poly;
+            }
+
+            function rsEncode(data, ecLen) {
+                const gen = rsGenPoly(ecLen);
+                const res = new Array(data.length + ecLen).fill(0);
+                for (let i = 0; i < data.length; i++) res[i] = data[i];
+                for (let i = 0; i < data.length; i++) {
+                    const coef = res[i];
+                    if (coef !== 0) {
+                        for (let j = 0; j < gen.length; j++) {
+                            res[i + j] ^= gfMul(gen[j], coef);
+                        }
+                    }
+                }
+                return res.slice(data.length);
+            }
+
+            function encode(text) {
+                // Кодуємо в байти ASCII/UTF-8 (максимум 53 байти для Version 3-L)
+                const rawBytes = [];
+                for (let i = 0; i < text.length; i++) {
+                    const code = text.charCodeAt(i);
+                    if (code < 128) rawBytes.push(code);
+                    else rawBytes.push(63); // '?' для нестандартних символів
+                }
+                const bytes = rawBytes.slice(0, 53);
+
+                const size = 29;
+                const dataCap = 55;
+                const ecLen = 15;
+
+                const bits = [];
+                const pushBits = (val, len) => {
+                    for (let i = len - 1; i >= 0; i--) bits.push((val >> i) & 1);
+                };
+
+                pushBits(4, 4); // Byte mode 0100
+                pushBits(bytes.length, 8);
+                bytes.forEach(b => pushBits(b, 8));
+                pushBits(0, 4);
+                while (bits.length % 8 !== 0) bits.push(0);
+
+                const cw = [];
+                for (let i = 0; i < bits.length; i += 8) {
+                    let b = 0;
+                    for (let j = 0; j < 8; j++) b = (b << 1) | bits[i + j];
+                    cw.push(b);
+                }
+                const pads = [0xec, 0x11];
+                let pIdx = 0;
+                while (cw.length < dataCap) {
+                    cw.push(pads[pIdx % 2]);
+                    pIdx++;
+                }
+
+                const ec = rsEncode(cw, ecLen);
+                const fullData = cw.concat(ec);
+                const dataBits = [];
+                fullData.forEach(b => {
+                    for (let i = 7; i >= 0; i--) dataBits.push((b >> i) & 1);
+                });
+
+                const modules = Array.from({ length: size }, () => Array(size).fill(null));
+                const isFunc = Array.from({ length: size }, () => Array(size).fill(false));
+
+                const setFunc = (r, c, val) => {
+                    if (r >= 0 && r < size && c >= 0 && c < size) {
+                        modules[r][c] = val ? 1 : 0;
+                        isFunc[r][c] = true;
+                    }
+                };
+
+                const drawFinder = (r, c) => {
+                    for (let dr = -1; dr <= 7; dr++) {
+                        for (let dc = -1; dc <= 7; dc++) {
+                            const in7 = dr >= 0 && dr <= 6 && dc >= 0 && dc <= 6;
+                            const isDark = in7 && (dr === 0 || dr === 6 || dc === 0 || dc === 6 || (dr >= 2 && dr <= 4 && dc >= 2 && dc <= 4));
+                            setFunc(r + dr, c + dc, isDark);
+                        }
+                    }
+                };
+
+                drawFinder(0, 0);
+                drawFinder(0, size - 7);
+                drawFinder(size - 7, 0);
+
+                const ac = size - 7;
+                for (let dr = -2; dr <= 2; dr++) {
+                    for (let dc = -2; dc <= 2; dc++) {
+                        const isDark = Math.abs(dr) === 2 || Math.abs(dc) === 2 || (dr === 0 && dc === 0);
+                        setFunc(ac + dr, ac + dc, isDark);
+                    }
+                }
+
+                for (let i = 8; i < size - 8; i++) {
+                    setFunc(6, i, i % 2 === 0);
+                    setFunc(i, 6, i % 2 === 0);
+                }
+                setFunc(size - 8, 8, true);
+
+                for (let i = 0; i < 9; i++) {
+                    if (i !== 6) {
+                        isFunc[8][i] = true;
+                        isFunc[i][8] = true;
+                    }
+                }
+                for (let i = 0; i < 8; i++) {
+                    isFunc[8][size - 1 - i] = true;
+                    isFunc[size - 1 - i][8] = true;
+                }
+
+                let bitIdx = 0;
+                let up = true;
+                for (let right = size - 1; right >= 1; right -= 2) {
+                    if (right === 6) right = 5;
+                    for (let vert = 0; vert < size; vert++) {
+                        const r = up ? (size - 1 - vert) : vert;
+                        for (let j = 0; j < 2; j++) {
+                            const c = right - j;
+                            if (!isFunc[r][c]) {
+                                const bit = bitIdx < dataBits.length ? dataBits[bitIdx++] : 0;
+                                const masked = ((r + c) % 2 === 0) ? (bit ^ 1) : bit;
+                                modules[r][c] = masked;
+                            }
+                        }
+                    }
+                    up = !up;
+                }
+
+                const fmt = 0x77c4; // Level L, Mask 0
+                for (let i = 0; i < 15; i++) {
+                    const bit = (fmt >> i) & 1;
+                    if (i < 6) modules[i][8] = bit;
+                    else if (i < 8) modules[i + 1][8] = bit;
+                    else modules[size - 15 + i][8] = bit;
+
+                    if (i < 8) modules[8][size - 1 - i] = bit;
+                    else if (i < 9) modules[8][15 - i] = bit;
+                    else modules[8][14 - i] = bit;
+                }
+
+                return { size, modules };
+            }
+
+            return { encode };
+        })();
+
+        function drawQRToCanvas(text) {
+            const canvas = document.getElementById('qrCanvas');
+            if (!canvas) return;
+            const ctx = canvas.getContext('2d');
+            if (!ctx) return;
+
+            const { size, modules } = RealQR.encode(text);
+            const quiet = 2;
+            const totalModules = size + quiet * 2; // 33x33
+            const cellSize = 6; // 33 * 6 = 198px
+            canvas.width = totalModules * cellSize;
+            canvas.height = totalModules * cellSize;
+
+            // Білий фон
+            ctx.fillStyle = '#ffffff';
+            ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+            // Чорні модулі QR-коду
+            ctx.fillStyle = '#09090b';
+            for (let r = 0; r < size; r++) {
+                for (let c = 0; c < size; c++) {
+                    if (modules[r][c] === 1) {
+                        ctx.fillRect((c + quiet) * cellSize, (r + quiet) * cellSize, cellSize, cellSize);
+                    }
+                }
+            }
+        }
+
+        let timeLeft = 15 * 60;
+        let timerInterval;
+        let currentCode = '';
+
+        function generateRandomDigits() {
+            return Math.floor(1000 + Math.random() * 9000);
+        }
+
+        function refreshCoupon(silent = false) {
+            const randomNum = generateRandomDigits();
+            currentCode = `KH${discountPercent}-${randomNum}`;
+            const promoTextEl = document.getElementById('promoText');
+            if (promoTextEl) promoTextEl.textContent = currentCode;
+
+            // Кодуємо компактний, завжди сканований рядок
+            const qrPayload = `KRUSTY HORSE -${discountPercent}% | CODE: ${currentCode}`;
+            drawQRToCanvas(qrPayload);
+
+            timeLeft = 15 * 60;
+            updateTimerDisplay();
+            if (!silent) showToast(`Новий QR-код (-${discountPercent}%) згенеровано!`);
+        }
+
+        function updateTimerDisplay() {
+            const minutes = Math.floor(timeLeft / 60).toString().padStart(2, '0');
+            const seconds = (timeLeft % 60).toString().padStart(2, '0');
+            const timerEl = document.getElementById('timer');
+            if (timerEl) timerEl.textContent = `${minutes}:${seconds}`;
+        }
+
+        function startTimer() {
+            clearInterval(timerInterval);
+            timerInterval = setInterval(() => {
+                if (timeLeft > 0) {
+                    timeLeft--;
+                    updateTimerDisplay();
+                } else {
+                    refreshCoupon(true);
+                }
+            }, 1000);
+        }
+
+        function copyPromoCode() {
+            const textArea = document.createElement("textarea");
+            textArea.value = currentCode;
+            textArea.style.position = "fixed";
+            textArea.style.left = "-9999px";
+            document.body.appendChild(textArea);
+            textArea.select();
+            try {
+                document.execCommand('copy');
+                showToast(`Промокод ${currentCode} скопійовано!`);
+            } catch (err) {
+                showToast('Не вдалося скопіювати код');
+            }
+            document.body.removeChild(textArea);
+        }
+
+        function handlePhoneClick(e) {
+            const phone = '0966591081';
+            const textArea = document.createElement("textarea");
+            textArea.value = phone;
+            textArea.style.position = "fixed";
+            textArea.style.left = "-9999px";
+            document.body.appendChild(textArea);
+            textArea.select();
+            try {
+                document.execCommand('copy');
+            } catch (err) {}
+            document.body.removeChild(textArea);
+            showToast('Виклик: 096 659 10 81 (номер скопійовано)');
+        }
+
+        function showToast(message) {
+            const toast = document.getElementById('toast');
+            if (!toast) return;
+            toast.textContent = message;
+            toast.classList.remove('opacity-0');
+            setTimeout(() => {
+                toast.classList.add('opacity-0');
+            }, 2500);
+        }
+
+        // Локальне та хмарне керування замовленнями
+        const LOCAL_ORDERS_KEY = 'kh_local_orders_v1';
+        let deliveryOrders = [];
+        let currentClientId = safeGetStorage('kh_client_id');
+        if (!currentClientId) {
+            currentClientId = 'client_' + Math.random().toString(36).substring(2, 10);
+            safeSetStorage('kh_client_id', currentClientId);
+        }
+
+        if (safeGetStorage('kh_admin_remembered') === 'true') {
+            isAdminUnlocked = true;
+            document.getElementById('adminLockIcon').innerHTML = `<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 11V7a4 4 0 118 0m-4 8v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2z"/>`;
+        }
+
+        let syncChannel = null;
+        try {
+            syncChannel = new BroadcastChannel('krusty_horse_orders_sync');
+            syncChannel.onmessage = () => {
+                if (!window.khCloudConnected) loadLocalOrders();
+            };
+        } catch (e) {}
+
+        window.addEventListener('storage', (e) => {
+            if (e.key === LOCAL_ORDERS_KEY && !window.khCloudConnected) {
+                loadLocalOrders();
+            }
+        });
+
+        function loadLocalOrders() {
+            try {
+                const raw = safeGetStorage(LOCAL_ORDERS_KEY);
+                deliveryOrders = raw ? JSON.parse(raw) : [];
+                deliveryOrders.sort((a, b) => (b.createdAt || 0) - (a.createdAt || 0));
+                updateBadges();
+                if (!document.getElementById('adminChatModal').classList.contains('hidden')) {
+                    renderAdminChatMessages();
+                }
+                if (!document.getElementById('clientOrdersModal').classList.contains('hidden')) {
+                    renderClientOrders();
+                }
+            } catch (e) {}
+        }
+
+        function saveLocalOrders() {
+            try {
+                safeSetStorage(LOCAL_ORDERS_KEY, JSON.stringify(deliveryOrders));
+                if (syncChannel) syncChannel.postMessage('updated');
+            } catch (e) {}
+        }
+
+        function updateBadges() {
+            const activeOrdersCount = deliveryOrders.filter(o => o.type === 'order' && !o.delivered).length;
+            const adminBadge = document.getElementById('adminOrderBadge');
+            if (adminBadge) adminBadge.textContent = activeOrdersCount;
+
+            const myOrdersCount = deliveryOrders.filter(o => o.type === 'order' && o.clientId === currentClientId).length;
+            const clientBadge = document.getElementById('clientOrderBadge');
+            if (clientBadge) {
+                if (myOrdersCount > 0) {
+                    clientBadge.textContent = myOrdersCount;
+                    clientBadge.classList.remove('hidden');
+                } else {
+                    clientBadge.classList.add('hidden');
+                }
+            }
+        }
+
+        function openDeliveryModal() {
+            renderMenuUI();
+            const modal = document.getElementById('deliveryModal');
+            modal.classList.remove('hidden');
+            modal.classList.add('flex');
+        }
+
+        function closeDeliveryModal() {
+            const modal = document.getElementById('deliveryModal');
+            modal.classList.add('hidden');
+            modal.classList.remove('flex');
+        }
+
+        async function submitDeliveryRequest(e) {
+            e.preventDefault();
+            const mult = getDiscountMultiplier();
+            const chosenItems = [];
+            let totalOriginal = 0;
+            let totalDiscounted = 0;
+
+            MENU_ITEMS.forEach(item => {
+                const qty = selectedMenuCart[item.id] || 0;
+                if (qty > 0) {
+                    const itemDiscountedPrice = Math.round(item.price * mult);
+                    chosenItems.push(`${item.icon} ${item.name} × ${qty} шт.`);
+                    totalOriginal += item.price * qty;
+                    totalDiscounted += itemDiscountedPrice * qty;
+                }
+            });
+
+            if (chosenItems.length === 0) {
+                showToast('Оберіть хоча б одну позицію з меню (+ Додати)!');
+                return;
+            }
+
+            const itemsSummary = `${chosenItems.join(', ')} — Разом: ${totalDiscounted} грн (замість ${totalOriginal} грн)`;
+
+            const address = document.getElementById('deliveryAddressInput').value.trim();
+            const contact = document.getElementById('deliveryContactInput').value.trim();
+            const submitBtn = document.getElementById('submitOrderBtn');
+
+            const now = new Date();
+            const timeStr = now.getHours().toString().padStart(2, '0') + ':' + now.getMinutes().toString().padStart(2, '0');
+
+            submitBtn.disabled = true;
+            submitBtn.textContent = 'Надсилання...';
+
+            const orderPayload = {
+                type: 'order',
+                clientId: currentClientId,
+                items: itemsSummary,
+                address,
+                contact,
+                promo: currentCode,
+                discount: discountPercent,
+                time: timeStr,
+                delivered: false,
+                createdAt: Date.now()
+            };
+
+            try {
+                if (window.khAddCloudOrder) {
+                    await window.khAddCloudOrder(orderPayload);
+                } else {
+                    deliveryOrders.unshift({ docId: 'local_' + Date.now(), ...orderPayload });
+                    saveLocalOrders();
+                    updateBadges();
+                }
+
+                Object.keys(selectedMenuCart).forEach(k => delete selectedMenuCart[k]);
+                renderMenuUI();
+
+                document.getElementById('deliveryAddressInput').value = '';
+                document.getElementById('deliveryContactInput').value = '';
+
+                closeDeliveryModal();
+                showToast('Замовлення успішно надіслано власнику!');
+                openClientOrdersModal();
+            } catch (err) {
+                deliveryOrders.unshift({ docId: 'local_' + Date.now(), ...orderPayload });
+                saveLocalOrders();
+                updateBadges();
+                closeDeliveryModal();
+                showToast('Замовлення збережено!');
+            } finally {
+                submitBtn.disabled = false;
+                submitBtn.textContent = 'Надіслати замовлення';
+            }
+        }
+
+        function openClientOrdersModal() {
+            const modal = document.getElementById('clientOrdersModal');
+            modal.classList.remove('hidden');
+            modal.classList.add('flex');
+            renderClientOrders();
+        }
+
+        function closeClientOrdersModal() {
+            const modal = document.getElementById('clientOrdersModal');
+            modal.classList.add('hidden');
+            modal.classList.remove('flex');
+        }
+
+        function renderClientOrders() {
+            const list = document.getElementById('clientOrdersList');
+            const myOrders = deliveryOrders.filter(o => o.type === 'order' && o.clientId === currentClientId);
+
+            if (myOrders.length === 0) {
+                list.innerHTML = `<div class="text-center py-12 text-zinc-500 text-sm">У вас поки немає активних замовлень доставки</div>`;
+                return;
+            }
+
+            list.innerHTML = myOrders.map(item => `
+                <div class="bg-zinc-950 border ${item.delivered ? 'border-emerald-500/40' : 'border-zinc-800'} rounded-2xl p-4 space-y-2">
+                    <div class="flex items-center justify-between">
+                        <span class="text-[11px] font-bold px-2.5 py-1 rounded-full ${item.delivered ? 'bg-emerald-500/20 text-emerald-400' : 'bg-amber-500/20 text-amber-400'}">
+                            ${item.delivered ? '✓ Доставлено' : '⏳ В обробці'}
+                        </span>
+                        <span class="text-[11px] text-zinc-500">${escapeHtml(item.time)}</span>
+                    </div>
+                    <p class="text-sm text-white font-semibold">${escapeHtml(item.items)}</p>
+                    <p class="text-xs text-zinc-400">📍 ${escapeHtml(item.address)}</p>
+                    <p class="text-[11px] text-zinc-500">Застосовано код: <span class="font-mono text-zinc-300">${escapeHtml(item.promo)}</span> (-${item.discount || 20}%)</p>
+                </div>
+            `).join('');
+        }
+
+        function handleAdminChatClick() {
+            if (isAdminUnlocked) {
+                openAdminChatModal();
+            } else {
+                const modal = document.getElementById('adminPinModal');
+                modal.classList.remove('hidden');
+                modal.classList.add('flex');
+                const input = document.getElementById('adminPinInput');
+                input.value = '';
+                setTimeout(() => input.focus(), 100);
+            }
+        }
+
+        function closeAdminPinModal() {
+            const modal = document.getElementById('adminPinModal');
+            modal.classList.add('hidden');
+            modal.classList.remove('flex');
+        }
+
+        function verifyAdminPin(e) {
+            e.preventDefault();
+            const enteredPin = document.getElementById('adminPinInput').value.trim();
+
+            if (enteredPin === EASTER_EGG_PIN) {
+                discountPercent = 25;
+                safeSetStorage('kh_easter_egg_25', 'true');
+                closeAdminPinModal();
+                renderMenuUI();
+                refreshCoupon(true);
+                showToast('🎉 Секретний код 6767! Активовано знижку 25%!');
+                return;
+            }
+
+            if (enteredPin === OWNER_PIN) {
+                isAdminUnlocked = true;
+                safeSetStorage('kh_admin_remembered', 'true');
+                document.getElementById('adminLockIcon').innerHTML = `<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 11V7a4 4 0 118 0m-4 8v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2z"/>`;
+                closeAdminPinModal();
+                openAdminChatModal();
+                showToast('Пристрій власника запам’ятовано');
+            } else {
+                showToast('Невірний PIN-код!');
+                document.getElementById('adminPinInput').value = '';
+            }
+        }
+
+        function logoutAdmin() {
+            isAdminUnlocked = false;
+            safeSetStorage('kh_admin_remembered', 'false');
+            document.getElementById('adminLockIcon').innerHTML = `<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"/>`;
+            closeAdminChatModal();
+            showToast('Доступ заблоковано');
+        }
+
+        function openAdminChatModal() {
+            const modal = document.getElementById('adminChatModal');
+            modal.classList.remove('hidden');
+            modal.classList.add('flex');
+            renderAdminChatMessages();
+        }
+
+        function closeAdminChatModal() {
+            const modal = document.getElementById('adminChatModal');
+            modal.classList.add('hidden');
+            modal.classList.remove('flex');
+        }
+
+        async function toggleOrderDelivered(docId) {
+            const order = deliveryOrders.find(o => o.docId === docId);
+            if (!order) return;
+            try {
+                if (window.khToggleCloudDelivered && !docId.startsWith('local_')) {
+                    await window.khToggleCloudDelivered(docId, !order.delivered);
+                } else {
+                    order.delivered = !order.delivered;
+                    saveLocalOrders();
+                    updateBadges();
+                    renderAdminChatMessages();
+                }
+            } catch (err) {
+                showToast('Не вдалося оновити статус');
+            }
+        }
+
+        async function sendOwnerNote(e) {
+            e.preventDefault();
+            const input = document.getElementById('ownerNoteInput');
+            const text = input.value.trim();
+            if (!text) return;
+
+            const now = new Date();
+            const timeStr = now.getHours().toString().padStart(2, '0') + ':' + now.getMinutes().toString().padStart(2, '0');
+            input.value = '';
+
+            const notePayload = {
+                type: 'note',
+                text,
+                time: timeStr,
+                createdAt: Date.now()
+            };
+
+            try {
+                if (window.khAddCloudOrder) {
+                    await window.khAddCloudOrder(notePayload);
+                } else {
+                    deliveryOrders.unshift({ docId: 'local_' + Date.now(), ...notePayload });
+                    saveLocalOrders();
+                    renderAdminChatMessages();
+                }
+            } catch (err) {
+                showToast('Не вдалося зберегти нотатку');
+            }
+        }
+
+        function renderAdminChatMessages() {
+            const list = document.getElementById('adminChatMessagesList');
+            if (deliveryOrders.length === 0) {
+                list.innerHTML = `<div class="text-center py-12 text-zinc-500 text-sm">Поки немає замовлень від клієнтів</div>`;
+                return;
+            }
+
+            list.innerHTML = deliveryOrders.map(item => {
+                if (item.type === 'note') {
+                    return `
+                        <div class="bg-amber-500/10 border border-amber-500/30 rounded-2xl p-3.5 ml-6">
+                            <div class="flex items-center justify-between mb-1">
+                                <span class="text-[11px] font-bold text-amber-400">Нотатка власника</span>
+                                <span class="text-[10px] text-zinc-500">${escapeHtml(item.time)}</span>
+                            </div>
+                            <p class="text-xs text-zinc-200">${escapeHtml(item.text)}</p>
+                        </div>
+                    `;
+                }
+
+                return `
+                    <div class="bg-zinc-950 border ${item.delivered ? 'border-emerald-500/30 opacity-75' : 'border-zinc-800'} rounded-2xl p-4 space-y-2.5">
+                        <div class="flex items-center justify-between">
+                            <span class="text-xs font-extrabold text-amber-400">Клієнт (${escapeHtml(item.contact)})</span>
+                            <span class="text-[11px] text-zinc-500">${escapeHtml(item.time)}</span>
+                        </div>
+                        <p class="text-sm text-white font-semibold leading-snug">${escapeHtml(item.items)}</p>
+                        <div class="text-xs text-zinc-400 space-y-1 pt-1 border-t border-zinc-800/80">
+                            <p>📍 ${escapeHtml(item.address)}</p>
+                            <p>🏷️ Промокод: <span class="font-mono text-emerald-400 font-bold">${escapeHtml(item.promo)}</span> (-${item.discount || 20}%)</p>
+                        </div>
+                        <button type="button" onclick="toggleOrderDelivered('${item.docId}')" class="w-full py-2 rounded-xl text-xs font-bold transition-colors ${item.delivered ? 'bg-zinc-800 text-emerald-400' : 'bg-emerald-500 hover:bg-emerald-400 text-zinc-950'}">
+                            ${item.delivered ? '✓ Доставлено (повернути)' : 'Позначити як доставлене'}
+                        </button>
+                    </div>
+                `;
+            }).join('');
+        }
+
+        function escapeHtml(str) {
+            const div = document.createElement('div');
+            div.textContent = str || '';
+            return div.innerHTML;
+        }
+
+        function toggleCloudSettings() {
+            const box = document.getElementById('cloudSettingsBox');
+            box.classList.toggle('hidden');
+            const cfg = window.khCurrentFirebaseConfig || {};
+            document.getElementById('firebaseConfigInput').value = JSON.stringify(cfg, null, 2);
+        }
+
+        function saveFirebaseConfig() {
+            const raw = document.getElementById('firebaseConfigInput').value.trim();
+            if (!raw) return;
+            try {
+                const cleaned = raw.replace(/^[^{]*/, '').replace(/[^}]*$/, '');
+                const parsed = JSON.parse(cleaned);
+                if (!parsed.apiKey || !parsed.projectId) {
+                    showToast('Невірний формат firebaseConfig');
+                    return;
+                }
+                safeSetStorage('kh_custom_firebase_config', JSON.stringify(parsed));
+                showToast('Конфігурацію збережено! Перезавантаження...');
+                setTimeout(() => location.reload(), 800);
+            } catch (e) {
+                showToast('Помилка: вставте коректний JSON об’єкт');
+            }
+        }
+
+        // Миттєвий запуск інтерфейсу та QR-коду одразу при відкритті сторінки
+        loadLocalOrders();
+        renderMenuUI();
+        refreshCoupon(true);
+        startTimer();
+        updateBadges();
+    </script>
+
+    <!-- Окремий модуль хмарної синхронізації Firebase (не блокує роботу QR-коду) -->
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
+        import { getAuth, signInAnonymously } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
+        import { getFirestore, collection, doc, addDoc, updateDoc, onSnapshot } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
+
+        const CUSTOM_FIREBASE_CONFIG = {
+            apiKey: "AIzaSyBcg45EcSfZbMPgbimdhWjCzdIUnjafo0s",
+            authDomain: "krusty-horse.firebaseapp.com",
+            projectId: "krusty-horse",
+            storageBucket: "krusty-horse.firebasestorage.app",
+            messagingSenderId: "462155764535",
+            appId: "1:462155764535:web:259aa88a88bdc0973400b2",
+            measurementId: "G-99KQM533JS"
+        };
+
+        let firebaseConfig = CUSTOM_FIREBASE_CONFIG;
+        const savedCfg = safeGetStorage('kh_custom_firebase_config');
+        if (savedCfg) {
+            try { firebaseConfig = JSON.parse(savedCfg); } catch (e) {}
+        }
+        window.khCurrentFirebaseConfig = firebaseConfig;
+
+        try {
+            const app = initializeApp(firebaseConfig);
+            const auth = getAuth(app);
+            const db = getFirestore(app);
+            const ordersCol = collection(db, 'kh_delivery_orders');
+
+            const cred = await signInAnonymously(auth);
+            if (cred.user) {
+                window.khAddCloudOrder = async (payload) => {
+                    await addDoc(ordersCol, payload);
+                };
+                window.khToggleCloudDelivered = async (docId, newState) => {
+                    await updateDoc(doc(db, 'kh_delivery_orders', docId), { delivered: newState });
+                };
+
+                onSnapshot(ordersCol, (snapshot) => {
+                    window.khCloudConnected = true;
+                    const statusEl = document.getElementById('cloudSyncStatus');
+                    if (statusEl) {
+                        statusEl.textContent = '● Хмара krusty-horse підключена • Усі браузери онлайн';
+                        statusEl.className = 'text-xs text-emerald-400';
+                    }
+                    const loaded = [];
+                    snapshot.forEach((docSnap) => {
+                        loaded.push({ docId: docSnap.id, ...docSnap.data() });
+                    });
+                    loaded.sort((a, b) => (b.createdAt || 0) - (a.createdAt || 0));
+                    deliveryOrders = loaded;
+                    updateBadges();
+                    if (!document.getElementById('adminChatModal').classList.contains('hidden')) {
+                        renderAdminChatMessages();
+                    }
+                    if (!document.getElementById('clientOrdersModal').classList.contains('hidden')) {
+                        renderClientOrders();
+                    }
+                }, (err) => {
+                    const statusEl = document.getElementById('cloudSyncStatus');
+                    if (statusEl) {
+                        statusEl.textContent = '⚠ Перевірте правила Firestore (Test mode) в Firebase';
+                        statusEl.className = 'text-xs text-amber-400';
+                    }
+                });
+            }
+        } catch (err) {
+            console.error('Firebase init error:', err);
+        }
+    </script>
+</body>
+</html>
