@@ -37,6 +37,7 @@
             image-rendering: pixelated;
             image-rendering: crisp-edges;
             display: block;
+            background-color: #ffffff;
         }
     </style>
 </head>
@@ -100,11 +101,11 @@
             <div class="p-6 text-center space-y-5">
                 <div>
                     <p class="text-sm text-zinc-400">
-                        Покажіть цей QR-код на касі магазину <span class="text-zinc-100 font-semibold">Krusty Horse</span> або замовте позиції з меню нижче
+                        Покажіть цей QR-код на касі магазину <span class="text-zinc-100 font-semibold">Krusty Horse</span> або замовте доставку чи самовивіз нижче
                     </p>
                 </div>
 
-                <!-- Контейнер QR-коду (нативний Canvas рендер — працює 100% скрізь без інтернету) -->
+                <!-- Контейнер QR-коду (нативний Canvas рендер) -->
                 <div class="relative mx-auto w-56 h-56 bg-white p-3.5 rounded-3xl shadow-[0_0_40px_rgba(245,158,11,0.18)] flex items-center justify-center">
                     <canvas id="qrCanvas" width="196" height="196"></canvas>
                 </div>
@@ -138,12 +139,30 @@
 
         <!-- Секція Меню закладу -->
         <section class="w-full bg-zinc-900/90 border border-zinc-800/80 rounded-3xl p-5 shadow-2xl space-y-3.5">
-            <div class="flex items-center justify-between">
-                <div>
+            <div class="flex items-center justify-between gap-2">
+                <div class="min-w-0">
                     <h2 class="text-base font-extrabold text-white tracking-tight">Меню Krusty Horse</h2>
-                    <p id="menuSubtitle" class="text-[11px] text-zinc-400">Доступно для замовлення на доставку зі знижкою 20%</p>
+                    <p id="menuSubtitle" class="text-[11px] text-zinc-400">Доступно для доставки та самовивозу зі знижкою 20%</p>
                 </div>
-                <span class="bg-amber-500/15 text-amber-400 border border-amber-500/30 text-[11px] font-bold px-2.5 py-1 rounded-xl">5 позицій</span>
+                <div class="flex items-center gap-1.5 shrink-0">
+                    <!-- Перемикач вигляду меню: Список або Квадратики -->
+                    <div class="flex items-center bg-zinc-950 border border-zinc-800 p-1 rounded-xl">
+                        <button type="button" id="viewListBtn" onclick="setMenuLayout('list')" title="Списком" class="p-1.5 rounded-lg bg-amber-500 text-zinc-950 transition-all">
+                            <svg width="14" height="14" class="w-3.5 h-3.5" fill="none" stroke="currentColor" stroke-width="2.4" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" d="M4 6h16M4 12h16M4 18h16"/>
+                            </svg>
+                        </button>
+                        <button type="button" id="viewGridBtn" onclick="setMenuLayout('grid')" title="Квадратиками" class="p-1.5 rounded-lg text-zinc-400 hover:text-white transition-all">
+                            <svg width="14" height="14" class="w-3.5 h-3.5" fill="none" stroke="currentColor" stroke-width="2.2" viewBox="0 0 24 24">
+                                <rect x="3" y="3" width="7" height="7" rx="1.5"/>
+                                <rect x="14" y="3" width="7" height="7" rx="1.5"/>
+                                <rect x="3" y="14" width="7" height="7" rx="1.5"/>
+                                <rect x="14" y="14" width="7" height="7" rx="1.5"/>
+                            </svg>
+                        </button>
+                    </div>
+                    <span class="bg-amber-500/15 text-amber-400 border border-amber-500/30 text-[11px] font-bold px-2.5 py-1 rounded-xl">6 позицій</span>
+                </div>
             </div>
 
             <div id="mainMenuList" class="space-y-2.5"></div>
@@ -156,7 +175,7 @@
             <svg width="20" height="20" class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.2" d="M13 16V6a1 1 0 00-1-1H4a1 1 0 00-1 1v10a1 1 0 001 1h1m8-1a1 1 0 01-1 1H9m4-1V8a1 1 0 011-1h2.586a1 1 0 01.707.293l3.414 3.414a1 1 0 01.293.707V16a1 1 0 01-1 1h-1m-6-1a1 1 0 001 1h1M5 17a2 2 0 104 0m-4 0a2 2 0 114 0m6 0a2 2 0 104 0m-4 0a2 2 0 114 0"/>
             </svg>
-            <span id="deliveryFooterBtnText">Замовити доставку з меню (-20%)</span>
+            <span id="deliveryFooterBtnText">Замовити / Самовивіз (-20%)</span>
         </button>
 
         <!-- Кнопка швидкого дзвінка в магазин -->
@@ -168,7 +187,7 @@
         </a>
     </footer>
 
-    <!-- МОДАЛЬНЕ ВІКНО 1: Оформлення доставки клієнтом (ТІЛЬКИ позиції з меню) -->
+    <!-- МОДАЛЬНЕ ВІКНО 1: Оформлення замовлення (Доставка або Самовивіз) -->
     <div id="deliveryModal" class="fixed inset-0 bg-black/80 backdrop-blur-sm z-50 hidden items-center justify-center p-4">
         <div class="bg-zinc-900 border border-zinc-800 rounded-3xl max-w-md w-full max-h-[90vh] flex flex-col overflow-hidden shadow-2xl">
             <div class="p-5 border-b border-zinc-800 flex items-center justify-between shrink-0">
@@ -179,7 +198,7 @@
                         </svg>
                     </div>
                     <div>
-                        <h3 class="text-lg font-extrabold text-white">Замовити доставку</h3>
+                        <h3 class="text-lg font-extrabold text-white">Оформити замовлення</h3>
                         <p id="modalDiscountSubtitle" class="text-xs text-emerald-400 font-semibold">Оберіть позиції з меню • Знижка -20%</p>
                     </div>
                 </div>
@@ -187,10 +206,23 @@
             </div>
 
             <form onsubmit="submitDeliveryRequest(event)" class="flex-1 overflow-y-auto p-5 space-y-4 no-scrollbar">
+                <!-- Перемикач способу отримання: Доставка / Самовивіз -->
+                <div>
+                    <label class="block text-xs font-semibold text-zinc-300 mb-2">Спосіб отримання:</label>
+                    <div class="grid grid-cols-2 gap-2 bg-zinc-950 p-1.5 rounded-2xl border border-zinc-800">
+                        <button type="button" id="methodDeliveryBtn" onclick="setOrderMethod('delivery')" class="py-2.5 px-3 rounded-xl text-xs font-extrabold transition-all bg-amber-500 text-zinc-950 shadow">
+                            🚚 Доставка
+                        </button>
+                        <button type="button" id="methodPickupBtn" onclick="setOrderMethod('pickup')" class="py-2.5 px-3 rounded-xl text-xs font-bold transition-all text-zinc-400 hover:text-white">
+                            🏃 Самовивіз
+                        </button>
+                    </div>
+                </div>
+
                 <div>
                     <div class="flex items-center justify-between mb-2">
                         <label class="block text-xs font-semibold text-zinc-300">Оберіть страви та напої з меню:</label>
-                        <span class="text-[11px] text-zinc-500">Інші товари недоступні</span>
+                        <span class="text-[11px] text-zinc-500">Тільки меню закладу</span>
                     </div>
                     <div id="modalMenuPicker" class="space-y-2"></div>
                 </div>
@@ -207,8 +239,8 @@
                     <span id="orderItemsCountBadge" class="text-xs font-bold text-zinc-300 bg-zinc-900 border border-zinc-800 px-3 py-1.5 rounded-xl">0 шт.</span>
                 </div>
 
-                <div>
-                    <label class="block text-xs font-semibold text-zinc-400 mb-1.5">Адреса або відділення пошти</label>
+                <div id="addressFieldWrapper">
+                    <label id="addressFieldLabel" class="block text-xs font-semibold text-zinc-400 mb-1.5">Адреса або відділення пошти</label>
                     <input id="deliveryAddressInput" required type="text" placeholder="м. Львів, вул. Франка 15 або НП №5" class="w-full bg-zinc-950 border border-zinc-800 focus:border-amber-500 rounded-2xl p-3 text-sm text-white placeholder-zinc-600 outline-none">
                 </div>
 
@@ -248,7 +280,7 @@
             </div>
             <div>
                 <h3 class="text-lg font-extrabold text-white">Доступ лише для власника</h3>
-                <p class="text-xs text-zinc-400 mt-1">Введіть PIN-код один раз, щоб запам'ятати цей пристрій</p>
+                <p class="text-xs text-zinc-400 mt-1">Введіть PIN-код один раз, щоб розблокувати чат та отримувати сповіщення</p>
             </div>
 
             <form onsubmit="verifyAdminPin(event)" class="space-y-3">
@@ -261,29 +293,51 @@
         </div>
     </div>
 
-    <!-- МОДАЛЬНЕ ВІКНО 4: Чат власника (Усі замовлення клієнтів) -->
+    <!-- МОДАЛЬНЕ ВІКНО 4: Чат власника (Усі замовлення клієнтів + Налаштування сповіщень) -->
     <div id="adminChatModal" class="fixed inset-0 bg-black/80 backdrop-blur-sm z-50 hidden items-center justify-center p-4">
-        <div class="bg-zinc-900 border border-zinc-800 rounded-3xl max-w-md w-full h-[80vh] flex flex-col overflow-hidden shadow-2xl">
+        <div class="bg-zinc-900 border border-zinc-800 rounded-3xl max-w-md w-full h-[82vh] flex flex-col overflow-hidden shadow-2xl">
             <div class="p-5 border-b border-zinc-800 flex items-center justify-between shrink-0">
                 <div>
                     <h3 class="text-lg font-extrabold text-white">Усі замовлення (Адмін)</h3>
                     <p id="cloudSyncStatus" class="text-xs text-amber-400">Підключення до хмари Krusty Horse...</p>
                 </div>
                 <div class="flex items-center gap-1.5">
-                    <button type="button" onclick="toggleCloudSettings()" title="Налаштувати хмару для всіх телефонів" class="w-8 h-8 rounded-xl bg-zinc-800 hover:bg-zinc-700 text-zinc-300 flex items-center justify-center text-sm">⚙</button>
-                    <button type="button" onclick="logoutAdmin()" title="Заблокувати доступ" class="px-2.5 py-1.5 rounded-xl bg-zinc-800 hover:bg-zinc-700 text-[11px] font-bold text-amber-400">Вийти</button>
+                    <button type="button" onclick="toggleCloudSettings()" title="Налаштування сповіщень та хмари" class="w-8 h-8 rounded-xl bg-zinc-800 hover:bg-zinc-700 text-zinc-300 flex items-center justify-center text-sm">⚙</button>
+                    <button type="button" onclick="logoutAdmin()" title="Заблокувати чат на пароль" class="px-2.5 py-1.5 rounded-xl bg-zinc-800 hover:bg-zinc-700 text-[11px] font-bold text-amber-400">Вийти</button>
                     <button type="button" onclick="closeAdminChatModal()" class="w-8 h-8 rounded-full bg-zinc-800 hover:bg-zinc-700 text-zinc-400 flex items-center justify-center">✕</button>
                 </div>
             </div>
 
-            <!-- Панель підключення хмарної бази (Firebase) для прийому замовлень з різних телефонів -->
-            <div id="cloudSettingsBox" class="hidden p-4 bg-zinc-950 border-b border-zinc-800 space-y-2.5 shrink-0">
-                <p class="text-xs font-bold text-white">Підключення хмари (проєкт krusty-horse підключено автоматично):</p>
-                <p class="text-[11px] text-zinc-400 leading-relaxed">За потреби можете замінити <span class="text-amber-400 font-mono">firebaseConfig</span> нижче:</p>
-                <textarea id="firebaseConfigInput" rows="3" placeholder='{"apiKey":"...","authDomain":"...","projectId":"..."}' class="w-full bg-zinc-900 border border-zinc-800 rounded-xl p-2 text-[11px] font-mono text-zinc-200 outline-none resize-none"></textarea>
-                <div class="flex gap-2">
-                    <button type="button" onclick="saveFirebaseConfig()" class="flex-1 py-2 rounded-xl bg-emerald-500 text-zinc-950 font-bold text-xs">Зберегти та підключити</button>
-                    <button type="button" onclick="toggleCloudSettings()" class="px-3 py-2 rounded-xl bg-zinc-800 text-zinc-300 text-xs">Закрити</button>
+            <!-- Панель налаштувань у чаті: Сповіщення + Хмара -->
+            <div id="cloudSettingsBox" class="hidden p-4 bg-zinc-950 border-b border-zinc-800 space-y-3.5 shrink-0">
+                <!-- Перемикач сповіщень на телефон (автоматично визначає Браузер або Додаток) -->
+                <div class="bg-zinc-900 border border-zinc-800 rounded-2xl p-3 space-y-2.5">
+                    <div class="flex items-center justify-between gap-3">
+                        <div>
+                            <p id="notifTitleLabel" class="text-xs font-extrabold text-white flex items-center gap-1.5">
+                                <span>🔔 Сповіщення</span>
+                            </p>
+                            <p id="notifStatusHint" class="text-[11px] text-zinc-400 mt-0.5">Працюють лише коли чат розблокований</p>
+                        </div>
+                        <button type="button" id="notifToggleBtn" onclick="toggleNotificationsSetting()" class="relative inline-flex h-7 w-12 shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out bg-emerald-500">
+                            <span id="notifToggleKnob" class="pointer-events-none inline-block h-6 w-6 transform rounded-full bg-white shadow ring-0 transition duration-200 ease-in-out translate-x-5"></span>
+                        </button>
+                    </div>
+                    <div class="flex items-center justify-between gap-2 pt-2 border-t border-zinc-800/80">
+                        <span id="browserPermLabel" class="text-[11px] text-zinc-400">Середовище: перевірка...</span>
+                        <button type="button" onclick="testBrowserNotification()" class="px-2.5 py-1 rounded-lg bg-zinc-800 hover:bg-zinc-700 text-[11px] font-bold text-amber-400 transition-colors">
+                            Перевірити тест
+                        </button>
+                    </div>
+                </div>
+
+                <div class="space-y-2 pt-1 border-t border-zinc-800/80">
+                    <p class="text-xs font-bold text-white">Підключення хмари (krusty-horse підключено):</p>
+                    <textarea id="firebaseConfigInput" rows="2" placeholder='{"apiKey":"...","authDomain":"...","projectId":"..."}' class="w-full bg-zinc-900 border border-zinc-800 rounded-xl p-2 text-[11px] font-mono text-zinc-200 outline-none resize-none"></textarea>
+                    <div class="flex gap-2">
+                        <button type="button" onclick="saveFirebaseConfig()" class="flex-1 py-2 rounded-xl bg-emerald-500 text-zinc-950 font-bold text-xs">Зберегти хмару</button>
+                        <button type="button" onclick="toggleCloudSettings()" class="px-3 py-2 rounded-xl bg-zinc-800 text-zinc-300 text-xs">Закрити</button>
+                    </div>
                 </div>
             </div>
 
@@ -303,15 +357,32 @@
         Повідомлення
     </div>
 
-    <!-- Звичайний скрипт (працює миттєво навіть в офлайн та в пісочниці без модулів) -->
+    <!-- Основний скрипт -->
     <script>
         // Секретний PIN-код власника та код пасхалки на 25% знижки
         const OWNER_PIN = '8531';
         const EASTER_EGG_PIN = '6767';
         let isAdminUnlocked = false;
         let discountPercent = 20;
+        let currentOrderMethod = 'delivery'; // 'delivery' або 'pickup'
 
-        // Багаторівневе сховище для синхронізації між вкладками та збереження сесії
+        // Визначення середовища запуску: Додаток (APK / PWA) чи Браузер (Сайт)
+        function detectIsAppMode() {
+            const isStandalone = window.matchMedia && window.matchMedia('(display-mode: standalone)').matches;
+            const isFullscreen = window.matchMedia && window.matchMedia('(display-mode: fullscreen)').matches;
+            const isIosStandalone = window.navigator.standalone === true;
+            const isAndroidWebView = /; wv\)/i.test(navigator.userAgent) ||
+                                     (document.referrer && document.referrer.startsWith('android-app://')) ||
+                                     typeof window.AndroidInterface !== 'undefined' ||
+                                     typeof window.ReactNativeWebView !== 'undefined' ||
+                                     typeof window.cordova !== 'undefined' ||
+                                     typeof window.Capacitor !== 'undefined';
+            return Boolean(isStandalone || isFullscreen || isIosStandalone || isAndroidWebView);
+        }
+
+        const IS_APP_MODE = detectIsAppMode();
+
+        // Багаторівневе сховище
         const memoryStorage = {};
         function getWindowNameData() {
             try {
@@ -349,6 +420,266 @@
             setWindowNameData(wn);
         }
 
+        // Звуковий сигнал нового замовлення (Web Audio API)
+        function playNotificationChime() {
+            try {
+                const AudioCtx = window.AudioContext || window.webkitAudioContext;
+                if (!AudioCtx) return;
+                const ctx = new AudioCtx();
+                const now = ctx.currentTime;
+
+                [587.33, 880].forEach((freq, idx) => {
+                    const osc = ctx.createOscillator();
+                    const gain = ctx.createGain();
+                    osc.type = 'sine';
+                    osc.frequency.setValueAtTime(freq, now + idx * 0.14);
+                    gain.gain.setValueAtTime(0.001, now + idx * 0.14);
+                    gain.gain.exponentialRampToValueAtTime(0.18, now + idx * 0.14 + 0.03);
+                    gain.gain.exponentialRampToValueAtTime(0.001, now + idx * 0.14 + 0.35);
+                    osc.connect(gain);
+                    gain.connect(ctx.destination);
+                    osc.start(now + idx * 0.14);
+                    osc.stop(now + idx * 0.14 + 0.36);
+                });
+            } catch (e) {}
+        }
+
+        // Стан налаштування сповіщень (за замовчуванням увімкнено, якщо не вимкнено вручну)
+        let notificationsEnabled = safeGetStorage('kh_admin_notif_enabled') !== 'false';
+        let knownOrderIds = new Set();
+        let isInitialOrdersLoad = true;
+        let swRegistration = null;
+
+        // Реєстрація Service Worker для системних сповіщень (як у браузері, так і в додатку)
+        async function initBrowserServiceWorker() {
+            if (!('serviceWorker' in navigator)) return;
+            try {
+                const swCode = `
+                    self.addEventListener('install', (e) => self.skipWaiting());
+                    self.addEventListener('activate', (e) => e.waitUntil(self.clients.claim()));
+                    self.addEventListener('notificationclick', (event) => {
+                        event.notification.close();
+                        event.waitUntil(
+                            self.clients.matchAll({ type: 'window', includeUncontrolled: true }).then((clientList) => {
+                                for (const client of clientList) {
+                                    if ('focus' in client) return client.focus();
+                                }
+                                if (self.clients.openWindow) return self.clients.openWindow('./');
+                            })
+                        );
+                    });
+                `;
+                const blob = new Blob([swCode], { type: 'application/javascript' });
+                const swUrl = URL.createObjectURL(blob);
+                swRegistration = await navigator.serviceWorker.register(swUrl);
+            } catch (e) {}
+        }
+        initBrowserServiceWorker();
+
+        function updateNotifToggleUI() {
+            const btn = document.getElementById('notifToggleBtn');
+            const knob = document.getElementById('notifToggleKnob');
+            const titleLabel = document.getElementById('notifTitleLabel');
+            const hint = document.getElementById('notifStatusHint');
+            const permLabel = document.getElementById('browserPermLabel');
+            if (!btn || !knob) return;
+
+            const sourceText = IS_APP_MODE ? 'від додатка Krusty Horse' : 'від браузера (сайт)';
+            if (titleLabel) {
+                titleLabel.innerHTML = IS_APP_MODE
+                    ? '<span>📱 Сповіщення від додатка</span>'
+                    : '<span>🌐 Сповіщення від браузера</span>';
+            }
+
+            if (notificationsEnabled) {
+                btn.classList.remove('bg-zinc-700');
+                btn.classList.add('bg-emerald-500');
+                knob.classList.remove('translate-x-0');
+                knob.classList.add('translate-x-5');
+                if (hint) hint.textContent = `Увімкнено (${sourceText}) • Доки чат відкрито`;
+            } else {
+                btn.classList.remove('bg-emerald-500');
+                btn.classList.add('bg-zinc-700');
+                knob.classList.remove('translate-x-5');
+                knob.classList.add('translate-x-0');
+                if (hint) hint.textContent = 'Вимкнено • Сповіщення не надходитимуть';
+            }
+
+            if (permLabel) {
+                if (IS_APP_MODE) {
+                    permLabel.innerHTML = '<span class="text-emerald-400 font-semibold">📱 Режим додатка активний</span>';
+                } else if (!('Notification' in window)) {
+                    permLabel.textContent = 'Браузер не підтримує Push';
+                } else if (Notification.permission === 'granted') {
+                    permLabel.innerHTML = '<span class="text-emerald-400 font-semibold">🌐 Дозвіл браузера надано</span>';
+                } else if (Notification.permission === 'denied') {
+                    permLabel.innerHTML = '<span class="text-rose-400 font-semibold">✕ Заблоковано в браузері</span>';
+                } else {
+                    permLabel.innerHTML = '<span class="text-amber-400">Потрібен дозвіл браузера</span>';
+                }
+            }
+        }
+
+        async function requestPhoneNotificationPermission() {
+            if (!('Notification' in window)) return IS_APP_MODE;
+            if (Notification.permission === 'granted') {
+                updateNotifToggleUI();
+                return true;
+            }
+            if (Notification.permission !== 'denied') {
+                try {
+                    const res = await Notification.requestPermission();
+                    updateNotifToggleUI();
+                    return res === 'granted';
+                } catch (e) {}
+            }
+            updateNotifToggleUI();
+            return IS_APP_MODE;
+        }
+
+        // Надсилання нативного сповіщення з урахуванням середовища (Додаток або Браузер)
+        async function showNativeEnvironmentNotification(title, body, tag) {
+            const formattedTitle = IS_APP_MODE
+                ? `📱 Krusty Horse (Додаток): ${title}`
+                : `🌐 Krusty Horse (Сайт): ${title}`;
+
+            // Якщо це нативний Android APK з вбудованим інтерфейсом сповіщень
+            try {
+                if (IS_APP_MODE && window.AndroidInterface && typeof window.AndroidInterface.showNotification === 'function') {
+                    window.AndroidInterface.showNotification(formattedTitle, body);
+                    return;
+                }
+            } catch (e) {}
+
+            if (!('Notification' in window)) return;
+            if (Notification.permission !== 'granted') {
+                const granted = await requestPhoneNotificationPermission();
+                if (!granted) return;
+            }
+
+            const iconSvg = "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Crect width='100' height='100' rx='24' fill='%2309090b'/%3E%3Cpath d='M75 38c0-8-6-14-14-14-3 0-6 1-8 2.5L43 18v10c-10 2-18 10-20 20l-8 6 6 10 10-2v16h12V66h12v12h12V56c5-3 8-9 8-18z' fill='%23f59e0b'/%3E%3C/svg%3E";
+            const options = {
+                body: body,
+                icon: iconSvg,
+                badge: iconSvg,
+                tag: tag || ('kh-order-' + Date.now()),
+                renotify: true,
+                requireInteraction: true,
+                vibrate: [250, 100, 250]
+            };
+
+            try {
+                if (swRegistration && swRegistration.showNotification) {
+                    await swRegistration.showNotification(formattedTitle, options);
+                    return;
+                }
+                const reg = navigator.serviceWorker ? await navigator.serviceWorker.getRegistration() : null;
+                if (reg && reg.showNotification) {
+                    await reg.showNotification(formattedTitle, options);
+                    return;
+                }
+            } catch (e) {}
+
+            try {
+                const notif = new Notification(formattedTitle, options);
+                notif.onclick = () => {
+                    window.focus();
+                    if (isAdminUnlocked) openAdminChatModal();
+                    notif.close();
+                };
+            } catch (e) {}
+        }
+
+        async function testBrowserNotification() {
+            if (!isAdminUnlocked) {
+                showToast('Спочатку розблокуйте чат власника');
+                return;
+            }
+            if (!notificationsEnabled) {
+                showToast('Увімкніть перемикач сповіщень вище');
+                return;
+            }
+            if (!IS_APP_MODE) {
+                const granted = await requestPhoneNotificationPermission();
+                if (!granted) {
+                    showToast('Дозвольте сповіщення у спливаючому вікні браузера');
+                    return;
+                }
+            }
+            playNotificationChime();
+            await showNativeEnvironmentNotification(
+                'Тест сповіщень',
+                IS_APP_MODE
+                    ? 'Сповіщення налаштовано! Нові замовлення приходитимуть від додатка Krusty Horse.'
+                    : 'Сповіщення налаштовано! Нові замовлення приходитимуть від браузера.',
+                'kh-test-notif'
+            );
+            showToast(IS_APP_MODE ? 'Тестове сповіщення від додатка надіслано!' : 'Тестове сповіщення від браузера надіслано!');
+        }
+
+        async function toggleNotificationsSetting() {
+            notificationsEnabled = !notificationsEnabled;
+            safeSetStorage('kh_admin_notif_enabled', notificationsEnabled ? 'true' : 'false');
+
+            if (notificationsEnabled) {
+                const granted = await requestPhoneNotificationPermission();
+                updateNotifToggleUI();
+                playNotificationChime();
+                if (granted || IS_APP_MODE) {
+                    showToast(IS_APP_MODE ? '📱 Сповіщення від додатка увімкнено' : '🌐 Сповіщення від браузера увімкнено');
+                } else {
+                    showToast('⚠ Натисніть «Дозволити» у запиті браузера');
+                }
+            } else {
+                updateNotifToggleUI();
+                showToast('🔕 Сповіщення вимкнено');
+            }
+        }
+
+        // Надсилання сповіщення власнику (ТІЛЬКИ якщо чат розблокований і сповіщення увімкнені)
+        function triggerOwnerOrderNotification(order) {
+            if (!isAdminUnlocked) return;
+            if (!notificationsEnabled) return;
+
+            const isPickup = order.deliveryMethod === 'pickup';
+            const title = isPickup ? '🏃 Новий САМОВИВІЗ!' : '🚚 Нове ЗАМОВЛЕННЯ на доставку!';
+            const body = `${order.items}\nКлієнт: ${order.contact} • ${order.address}`;
+
+            // 1. Звук + вібрація на телефоні
+            playNotificationChime();
+            if ('vibrate' in navigator) {
+                try { navigator.vibrate([250, 100, 250]); } catch (e) {}
+            }
+
+            // 2. Внутрішнє спливаюче сповіщення в додатку / на сайті
+            const sourceBadge = IS_APP_MODE ? '📱' : '🌐';
+            showToast(`${sourceBadge} ${title} (${order.contact})`);
+
+            // 3. Системне сповіщення (від додатка або від браузера)
+            showNativeEnvironmentNotification(title, body, 'kh-order-' + (order.docId || Date.now()));
+        }
+
+        function checkForNewOrdersAndNotify(ordersList) {
+            const currentIds = new Set();
+            ordersList.forEach(o => {
+                if (o.docId) currentIds.add(o.docId);
+            });
+
+            if (isInitialOrdersLoad) {
+                knownOrderIds = currentIds;
+                isInitialOrdersLoad = false;
+                return;
+            }
+
+            ordersList.forEach(order => {
+                if (order.docId && !knownOrderIds.has(order.docId) && order.type === 'order') {
+                    triggerOwnerOrderNotification(order);
+                }
+            });
+
+            knownOrderIds = currentIds;
+        }
+
         if (safeGetStorage('kh_easter_egg_25') === 'true') {
             discountPercent = 25;
         }
@@ -381,7 +712,7 @@
                 }
                 if (horseIcon) horseIcon.className = 'w-6 h-6 text-amber-400 transition-colors';
                 if (passLabel) passLabel.textContent = 'Club Pass';
-                if (menuSubtitle) menuSubtitle.textContent = 'Доступно для замовлення на доставку зі знижкою 20%';
+                if (menuSubtitle) menuSubtitle.textContent = 'Доступно для доставки та самовивозу зі знижкою 20%';
                 if (modalSubtitle) modalSubtitle.textContent = 'Оберіть позиції з меню • Знижка -20%';
                 if (totalLabel) totalLabel.textContent = 'До сплати зі знижкою 20%:';
             }
@@ -393,17 +724,65 @@
             { id: 'tea', name: 'Чай', desc: 'Гарячий запашний чай на вибір', price: 50, icon: '🍵' },
             { id: 'toasts', name: 'Тости', desc: 'Хрусткі підсмажені тости', price: 75, icon: '🥪' },
             { id: 'kakashky', name: 'Какашки', desc: 'Фірмовий десерт Krusty Horse', price: 85, icon: '💩' },
-            { id: 'bread', name: 'Хліб', desc: 'Свіжа випічка з хрусткою скоринкою', price: 40, icon: '🍞' }
+            { id: 'bread', name: 'Хліб', desc: 'Свіжа випічка з хрусткою скоринкою', price: 40, icon: '🍞' },
+            { id: 'yogurt', name: 'Йогурт', desc: 'Ніжний натуральний йогурт', price: 55, icon: '🥛' }
         ];
 
         const selectedMenuCart = {};
+        let menuLayoutMode = safeGetStorage('kh_menu_layout') === 'grid' ? 'grid' : 'list';
+
+        function setMenuLayout(mode) {
+            menuLayoutMode = mode === 'grid' ? 'grid' : 'list';
+            safeSetStorage('kh_menu_layout', menuLayoutMode);
+            renderMenuUI();
+        }
+
+        function updateMenuLayoutToggleUI() {
+            const listBtn = document.getElementById('viewListBtn');
+            const gridBtn = document.getElementById('viewGridBtn');
+            const mainList = document.getElementById('mainMenuList');
+            if (!listBtn || !gridBtn || !mainList) return;
+
+            if (menuLayoutMode === 'grid') {
+                gridBtn.className = 'p-1.5 rounded-lg bg-amber-500 text-zinc-950 transition-all shadow';
+                listBtn.className = 'p-1.5 rounded-lg text-zinc-400 hover:text-white transition-all';
+                mainList.className = 'grid grid-cols-2 gap-2.5';
+            } else {
+                listBtn.className = 'p-1.5 rounded-lg bg-amber-500 text-zinc-950 transition-all shadow';
+                gridBtn.className = 'p-1.5 rounded-lg text-zinc-400 hover:text-white transition-all';
+                mainList.className = 'space-y-2.5';
+            }
+        }
 
         function getDiscountMultiplier() {
             return (100 - discountPercent) / 100;
         }
 
+        function setOrderMethod(method) {
+            currentOrderMethod = method;
+            const delBtn = document.getElementById('methodDeliveryBtn');
+            const pickBtn = document.getElementById('methodPickupBtn');
+            const addrLabel = document.getElementById('addressFieldLabel');
+            const addrInput = document.getElementById('deliveryAddressInput');
+
+            if (method === 'pickup') {
+                pickBtn.className = 'py-2.5 px-3 rounded-xl text-xs font-extrabold transition-all bg-emerald-500 text-zinc-950 shadow';
+                delBtn.className = 'py-2.5 px-3 rounded-xl text-xs font-bold transition-all text-zinc-400 hover:text-white';
+                addrLabel.textContent = 'Орієнтовний час самовивозу (або коментар)';
+                addrInput.placeholder = 'Заберу через 15 хв у магазині Krusty Horse';
+                addrInput.required = false;
+            } else {
+                delBtn.className = 'py-2.5 px-3 rounded-xl text-xs font-extrabold transition-all bg-amber-500 text-zinc-950 shadow';
+                pickBtn.className = 'py-2.5 px-3 rounded-xl text-xs font-bold transition-all text-zinc-400 hover:text-white';
+                addrLabel.textContent = 'Адреса або відділення пошти';
+                addrInput.placeholder = 'м. Львів, вул. Франка 15 або НП №5';
+                addrInput.required = true;
+            }
+        }
+
         function renderMenuUI() {
             applyDiscountTheme();
+            updateMenuLayoutToggleUI();
             const mainList = document.getElementById('mainMenuList');
             const modalPicker = document.getElementById('modalMenuPicker');
             const mult = getDiscountMultiplier();
@@ -421,37 +800,69 @@
             });
 
             if (mainList) {
-                mainList.innerHTML = MENU_ITEMS.map(item => {
-                    const qty = selectedMenuCart[item.id] || 0;
-                    const discountedPrice = Math.round(item.price * mult);
-                    return `
-                        <div class="bg-zinc-950/90 border ${qty > 0 ? 'border-amber-500/50' : 'border-zinc-800/90'} rounded-2xl p-3 flex items-center justify-between gap-3 transition-colors">
-                            <div class="flex items-center gap-3 min-w-0">
-                                <div class="w-10 h-10 rounded-xl bg-zinc-900 border border-zinc-800 flex items-center justify-center text-lg shrink-0">
+                if (menuLayoutMode === 'grid') {
+                    mainList.innerHTML = MENU_ITEMS.map(item => {
+                        const qty = selectedMenuCart[item.id] || 0;
+                        const discountedPrice = Math.round(item.price * mult);
+                        return `
+                            <div class="bg-zinc-950/90 border ${qty > 0 ? 'border-amber-500/60' : 'border-zinc-800/90'} rounded-2xl p-3 flex flex-col justify-between items-center text-center gap-2.5 transition-colors">
+                                <div class="w-12 h-12 rounded-2xl bg-zinc-900 border border-zinc-800 flex items-center justify-center text-2xl">
                                     ${item.icon}
                                 </div>
-                                <div class="min-w-0">
+                                <div class="w-full min-w-0">
                                     <p class="text-sm font-bold text-white truncate">${escapeHtml(item.name)}</p>
-                                    <div class="flex items-center gap-1.5 text-xs">
+                                    <div class="flex items-center justify-center gap-1.5 text-xs mt-0.5">
                                         <span class="font-extrabold ${discountPercent === 25 ? 'text-emerald-400' : 'text-amber-400'}">${discountedPrice} грн</span>
                                         <span class="text-zinc-500 line-through text-[11px]">${item.price} грн</span>
                                     </div>
                                 </div>
+                                <div class="w-full flex items-center justify-center gap-1.5 pt-0.5">
+                                    ${qty > 0 ? `
+                                        <button type="button" onclick="changeMenuQty('${item.id}', -1)" class="w-8 h-8 rounded-xl bg-zinc-800 hover:bg-zinc-700 active:scale-95 text-white font-bold flex items-center justify-center">−</button>
+                                        <span class="w-6 text-center text-xs font-extrabold text-amber-400">${qty}</span>
+                                        <button type="button" onclick="changeMenuQty('${item.id}', 1)" class="w-8 h-8 rounded-xl bg-amber-500 hover:bg-amber-400 active:scale-95 text-zinc-950 font-black flex items-center justify-center">+</button>
+                                    ` : `
+                                        <button type="button" onclick="changeMenuQty('${item.id}', 1)" class="w-full py-1.5 rounded-xl bg-zinc-800 hover:bg-zinc-700 active:scale-95 text-xs font-bold text-zinc-200 border border-zinc-700/70">
+                                            + Додати
+                                        </button>
+                                    `}
+                                </div>
                             </div>
-                            <div class="flex items-center gap-1.5 shrink-0">
-                                ${qty > 0 ? `
-                                    <button type="button" onclick="changeMenuQty('${item.id}', -1)" class="w-8 h-8 rounded-xl bg-zinc-800 hover:bg-zinc-700 active:scale-95 text-white font-bold flex items-center justify-center">−</button>
-                                    <span class="w-6 text-center text-xs font-extrabold text-amber-400">${qty}</span>
-                                    <button type="button" onclick="changeMenuQty('${item.id}', 1)" class="w-8 h-8 rounded-xl bg-amber-500 hover:bg-amber-400 active:scale-95 text-zinc-950 font-black flex items-center justify-center">+</button>
-                                ` : `
-                                    <button type="button" onclick="changeMenuQty('${item.id}', 1)" class="px-3 py-1.5 rounded-xl bg-zinc-800 hover:bg-zinc-700 active:scale-95 text-xs font-bold text-zinc-200 border border-zinc-700/70">
-                                        + Додати
-                                    </button>
-                                `}
+                        `;
+                    }).join('');
+                } else {
+                    mainList.innerHTML = MENU_ITEMS.map(item => {
+                        const qty = selectedMenuCart[item.id] || 0;
+                        const discountedPrice = Math.round(item.price * mult);
+                        return `
+                            <div class="bg-zinc-950/90 border ${qty > 0 ? 'border-amber-500/50' : 'border-zinc-800/90'} rounded-2xl p-3 flex items-center justify-between gap-3 transition-colors">
+                                <div class="flex items-center gap-3 min-w-0">
+                                    <div class="w-10 h-10 rounded-xl bg-zinc-900 border border-zinc-800 flex items-center justify-center text-lg shrink-0">
+                                        ${item.icon}
+                                    </div>
+                                    <div class="min-w-0">
+                                        <p class="text-sm font-bold text-white truncate">${escapeHtml(item.name)}</p>
+                                        <div class="flex items-center gap-1.5 text-xs">
+                                            <span class="font-extrabold ${discountPercent === 25 ? 'text-emerald-400' : 'text-amber-400'}">${discountedPrice} грн</span>
+                                            <span class="text-zinc-500 line-through text-[11px]">${item.price} грн</span>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="flex items-center gap-1.5 shrink-0">
+                                    ${qty > 0 ? `
+                                        <button type="button" onclick="changeMenuQty('${item.id}', -1)" class="w-8 h-8 rounded-xl bg-zinc-800 hover:bg-zinc-700 active:scale-95 text-white font-bold flex items-center justify-center">−</button>
+                                        <span class="w-6 text-center text-xs font-extrabold text-amber-400">${qty}</span>
+                                        <button type="button" onclick="changeMenuQty('${item.id}', 1)" class="w-8 h-8 rounded-xl bg-amber-500 hover:bg-amber-400 active:scale-95 text-zinc-950 font-black flex items-center justify-center">+</button>
+                                    ` : `
+                                        <button type="button" onclick="changeMenuQty('${item.id}', 1)" class="px-3 py-1.5 rounded-xl bg-zinc-800 hover:bg-zinc-700 active:scale-95 text-xs font-bold text-zinc-200 border border-zinc-700/70">
+                                            + Додати
+                                        </button>
+                                    `}
+                                </div>
                             </div>
-                        </div>
-                    `;
-                }).join('');
+                        `;
+                    }).join('');
+                }
             }
 
             if (modalPicker) {
@@ -459,45 +870,44 @@
                     const qty = selectedMenuCart[item.id] || 0;
                     const discountedPrice = Math.round(item.price * mult);
                     return `
-                        <div class="bg-zinc-950 border ${qty > 0 ? 'border-amber-500/60' : 'border-zinc-800'} rounded-2xl p-2.5 flex items-center justify-between gap-2">
+                        <div class="bg-zinc-950 border ${qty > 0 ? 'border-amber-500/60' : 'border-zinc-800'} rounded-2xl p-2.5 flex items-center justify-between gap-2.5">
                             <div class="flex items-center gap-2.5 min-w-0">
                                 <span class="text-base shrink-0">${item.icon}</span>
                                 <div class="min-w-0">
                                     <p class="text-xs font-bold text-white truncate">${escapeHtml(item.name)}</p>
-                                    <p class="text-[11px] ${discountPercent === 25 ? 'text-emerald-400' : 'text-amber-400'} font-semibold">${discountedPrice} грн <span class="text-zinc-500 line-through">${item.price} грн</span></p>
+                                    <p class="text-[11px] text-amber-400 font-semibold">${discountedPrice} грн <span class="text-zinc-600 line-through">${item.price}</span></p>
                                 </div>
                             </div>
                             <div class="flex items-center gap-1.5 shrink-0">
-                                <button type="button" onclick="changeMenuQty('${item.id}', -1)" class="w-7 h-7 rounded-lg bg-zinc-800 hover:bg-zinc-700 text-zinc-200 font-bold text-sm flex items-center justify-center">−</button>
-                                <span class="w-6 text-center text-xs font-extrabold ${qty > 0 ? 'text-amber-400' : 'text-zinc-500'}">${qty}</span>
-                                <button type="button" onclick="changeMenuQty('${item.id}', 1)" class="w-7 h-7 rounded-lg bg-amber-500 hover:bg-amber-400 text-zinc-950 font-black text-sm flex items-center justify-center">+</button>
+                                <button type="button" onclick="changeMenuQty('${item.id}', -1)" class="w-7 h-7 rounded-lg bg-zinc-800 hover:bg-zinc-700 text-white font-bold text-xs flex items-center justify-center">−</button>
+                                <span class="w-5 text-center text-xs font-extrabold ${qty > 0 ? 'text-amber-400' : 'text-zinc-500'}">${qty}</span>
+                                <button type="button" onclick="changeMenuQty('${item.id}', 1)" class="w-7 h-7 rounded-lg bg-amber-500 hover:bg-amber-400 text-zinc-950 font-black text-xs flex items-center justify-center">+</button>
                             </div>
                         </div>
                     `;
                 }).join('');
             }
 
-            const footerBtnText = document.getElementById('deliveryFooterBtnText');
-            if (footerBtnText) {
-                footerBtnText.textContent = totalQty > 0
-                    ? `Оформити доставку (${totalQty} шт. • ${totalDiscounted} грн)`
-                    : `Замовити доставку з меню (-${discountPercent}%)`;
-            }
-
-            const totalDiscEl = document.getElementById('orderTotalDiscounted');
-            const totalOrigEl = document.getElementById('orderTotalOriginal');
+            const discountedEl = document.getElementById('orderTotalDiscounted');
+            const originalEl = document.getElementById('orderTotalOriginal');
             const countBadgeEl = document.getElementById('orderItemsCountBadge');
+            const footerBtnEl = document.getElementById('deliveryFooterBtnText');
 
-            if (totalDiscEl) totalDiscEl.textContent = `${totalDiscounted} грн`;
-            if (totalOrigEl) {
+            if (discountedEl) discountedEl.textContent = `${totalDiscounted} грн`;
+            if (originalEl) {
                 if (totalOriginal > 0) {
-                    totalOrigEl.textContent = `${totalOriginal} грн`;
-                    totalOrigEl.classList.remove('hidden');
+                    originalEl.textContent = `${totalOriginal} грн`;
+                    originalEl.classList.remove('hidden');
                 } else {
-                    totalOrigEl.classList.add('hidden');
+                    originalEl.classList.add('hidden');
                 }
             }
             if (countBadgeEl) countBadgeEl.textContent = `${totalQty} шт.`;
+            if (footerBtnEl) {
+                footerBtnEl.textContent = totalQty > 0
+                    ? `Оформити замовлення (${totalQty} шт. • ${totalDiscounted} грн)`
+                    : `Замовити / Самовивіз (-${discountPercent}%)`;
+            }
         }
 
         function changeMenuQty(itemId, delta) {
@@ -513,7 +923,7 @@
             renderMenuUI();
         }
 
-        // 100% автономний математичний генератор QR-коду (версія 3, 29x29 модулів) + Canvas рендер
+        // Автономний математичний генератор QR-коду (версія 3, 29x29 модулів) + Canvas рендер
         const RealQR = (function() {
             const EXP = new Uint8Array(512), LOG = new Uint8Array(256);
             let x = 1;
@@ -556,12 +966,11 @@
             }
 
             function encode(text) {
-                // Кодуємо в байти ASCII/UTF-8 (максимум 53 байти для Version 3-L)
                 const rawBytes = [];
                 for (let i = 0; i < text.length; i++) {
                     const code = text.charCodeAt(i);
                     if (code < 128) rawBytes.push(code);
-                    else rawBytes.push(63); // '?' для нестандартних символів
+                    else rawBytes.push(63);
                 }
                 const bytes = rawBytes.slice(0, 53);
 
@@ -574,7 +983,7 @@
                     for (let i = len - 1; i >= 0; i--) bits.push((val >> i) & 1);
                 };
 
-                pushBits(4, 4); // Byte mode 0100
+                pushBits(4, 4);
                 pushBits(bytes.length, 8);
                 bytes.forEach(b => pushBits(b, 8));
                 pushBits(0, 4);
@@ -667,7 +1076,7 @@
                     up = !up;
                 }
 
-                const fmt = 0x77c4; // Level L, Mask 0
+                const fmt = 0x77c4;
                 for (let i = 0; i < 15; i++) {
                     const bit = (fmt >> i) & 1;
                     if (i < 6) modules[i][8] = bit;
@@ -693,16 +1102,14 @@
 
             const { size, modules } = RealQR.encode(text);
             const quiet = 2;
-            const totalModules = size + quiet * 2; // 33x33
-            const cellSize = 6; // 33 * 6 = 198px
+            const totalModules = size + quiet * 2;
+            const cellSize = 6;
             canvas.width = totalModules * cellSize;
             canvas.height = totalModules * cellSize;
 
-            // Білий фон
             ctx.fillStyle = '#ffffff';
             ctx.fillRect(0, 0, canvas.width, canvas.height);
 
-            // Чорні модулі QR-коду
             ctx.fillStyle = '#09090b';
             for (let r = 0; r < size; r++) {
                 for (let c = 0; c < size; c++) {
@@ -727,7 +1134,6 @@
             const promoTextEl = document.getElementById('promoText');
             if (promoTextEl) promoTextEl.textContent = currentCode;
 
-            // Кодуємо компактний, завжди сканований рядок
             const qrPayload = `KRUSTY HORSE -${discountPercent}% | CODE: ${currentCode}`;
             drawQRToCanvas(qrPayload);
 
@@ -793,7 +1199,7 @@
             toast.classList.remove('opacity-0');
             setTimeout(() => {
                 toast.classList.add('opacity-0');
-            }, 2500);
+            }, 3000);
         }
 
         // Локальне та хмарне керування замовленнями
@@ -829,6 +1235,7 @@
                 const raw = safeGetStorage(LOCAL_ORDERS_KEY);
                 deliveryOrders = raw ? JSON.parse(raw) : [];
                 deliveryOrders.sort((a, b) => (b.createdAt || 0) - (a.createdAt || 0));
+                checkForNewOrdersAndNotify(deliveryOrders);
                 updateBadges();
                 if (!document.getElementById('adminChatModal').classList.contains('hidden')) {
                     renderAdminChatMessages();
@@ -864,6 +1271,7 @@
         }
 
         function openDeliveryModal() {
+            setOrderMethod(currentOrderMethod);
             renderMenuUI();
             const modal = document.getElementById('deliveryModal');
             modal.classList.remove('hidden');
@@ -900,7 +1308,10 @@
 
             const itemsSummary = `${chosenItems.join(', ')} — Разом: ${totalDiscounted} грн (замість ${totalOriginal} грн)`;
 
-            const address = document.getElementById('deliveryAddressInput').value.trim();
+            const rawAddress = document.getElementById('deliveryAddressInput').value.trim();
+            const address = currentOrderMethod === 'pickup'
+                ? (rawAddress ? `Самовивіз (${rawAddress})` : 'Самовивіз із магазину Krusty Horse')
+                : rawAddress;
             const contact = document.getElementById('deliveryContactInput').value.trim();
             const submitBtn = document.getElementById('submitOrderBtn');
 
@@ -912,6 +1323,7 @@
 
             const orderPayload = {
                 type: 'order',
+                deliveryMethod: currentOrderMethod,
                 clientId: currentClientId,
                 items: itemsSummary,
                 address,
@@ -927,8 +1339,10 @@
                 if (window.khAddCloudOrder) {
                     await window.khAddCloudOrder(orderPayload);
                 } else {
-                    deliveryOrders.unshift({ docId: 'local_' + Date.now(), ...orderPayload });
+                    const localDocId = 'local_' + Date.now();
+                    deliveryOrders.unshift({ docId: localDocId, ...orderPayload });
                     saveLocalOrders();
+                    checkForNewOrdersAndNotify(deliveryOrders);
                     updateBadges();
                 }
 
@@ -942,8 +1356,10 @@
                 showToast('Замовлення успішно надіслано власнику!');
                 openClientOrdersModal();
             } catch (err) {
-                deliveryOrders.unshift({ docId: 'local_' + Date.now(), ...orderPayload });
+                const localDocId = 'local_' + Date.now();
+                deliveryOrders.unshift({ docId: localDocId, ...orderPayload });
                 saveLocalOrders();
+                checkForNewOrdersAndNotify(deliveryOrders);
                 updateBadges();
                 closeDeliveryModal();
                 showToast('Замовлення збережено!');
@@ -971,23 +1387,26 @@
             const myOrders = deliveryOrders.filter(o => o.type === 'order' && o.clientId === currentClientId);
 
             if (myOrders.length === 0) {
-                list.innerHTML = `<div class="text-center py-12 text-zinc-500 text-sm">У вас поки немає активних замовлень доставки</div>`;
+                list.innerHTML = `<div class="text-center py-12 text-zinc-500 text-sm">У вас поки немає активних замовлень</div>`;
                 return;
             }
 
-            list.innerHTML = myOrders.map(item => `
-                <div class="bg-zinc-950 border ${item.delivered ? 'border-emerald-500/40' : 'border-zinc-800'} rounded-2xl p-4 space-y-2">
-                    <div class="flex items-center justify-between">
-                        <span class="text-[11px] font-bold px-2.5 py-1 rounded-full ${item.delivered ? 'bg-emerald-500/20 text-emerald-400' : 'bg-amber-500/20 text-amber-400'}">
-                            ${item.delivered ? '✓ Доставлено' : '⏳ В обробці'}
-                        </span>
-                        <span class="text-[11px] text-zinc-500">${escapeHtml(item.time)}</span>
+            list.innerHTML = myOrders.map(item => {
+                const isPickup = item.deliveryMethod === 'pickup';
+                return `
+                    <div class="bg-zinc-950 border ${item.delivered ? 'border-emerald-500/40' : 'border-zinc-800'} rounded-2xl p-4 space-y-2">
+                        <div class="flex items-center justify-between gap-2">
+                            <span class="text-[11px] font-bold px-2.5 py-1 rounded-full ${item.delivered ? 'bg-emerald-500/20 text-emerald-400' : 'bg-amber-500/20 text-amber-400'}">
+                                ${item.delivered ? (isPickup ? '✓ Видано' : '✓ Доставлено') : '⏳ В обробці'}
+                            </span>
+                            <span class="text-[11px] text-zinc-500">${escapeHtml(item.time)}</span>
+                        </div>
+                        <p class="text-sm text-white font-semibold">${escapeHtml(item.items)}</p>
+                        <p class="text-xs text-zinc-400">${isPickup ? '🏃' : '📍'} ${escapeHtml(item.address)}</p>
+                        <p class="text-[11px] text-zinc-500">Застосовано код: <span class="font-mono text-zinc-300">${escapeHtml(item.promo)}</span> (-${item.discount || 20}%)</p>
                     </div>
-                    <p class="text-sm text-white font-semibold">${escapeHtml(item.items)}</p>
-                    <p class="text-xs text-zinc-400">📍 ${escapeHtml(item.address)}</p>
-                    <p class="text-[11px] text-zinc-500">Застосовано код: <span class="font-mono text-zinc-300">${escapeHtml(item.promo)}</span> (-${item.discount || 20}%)</p>
-                </div>
-            `).join('');
+                `;
+            }).join('');
         }
 
         function handleAdminChatClick() {
@@ -1009,7 +1428,7 @@
             modal.classList.remove('flex');
         }
 
-        function verifyAdminPin(e) {
+        async function verifyAdminPin(e) {
             e.preventDefault();
             const enteredPin = document.getElementById('adminPinInput').value.trim();
 
@@ -1028,8 +1447,11 @@
                 safeSetStorage('kh_admin_remembered', 'true');
                 document.getElementById('adminLockIcon').innerHTML = `<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 11V7a4 4 0 118 0m-4 8v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2z"/>`;
                 closeAdminPinModal();
+                if (notificationsEnabled) {
+                    await requestPhoneNotificationPermission();
+                }
                 openAdminChatModal();
-                showToast('Пристрій власника запам’ятовано');
+                showToast(IS_APP_MODE ? 'Чат розблоковано • Сповіщення додатка активні' : 'Чат розблоковано • Сповіщення браузера активні');
             } else {
                 showToast('Невірний PIN-код!');
                 document.getElementById('adminPinInput').value = '';
@@ -1041,10 +1463,11 @@
             safeSetStorage('kh_admin_remembered', 'false');
             document.getElementById('adminLockIcon').innerHTML = `<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"/>`;
             closeAdminChatModal();
-            showToast('Доступ заблоковано');
+            showToast('Чат заблоковано • Сповіщення призупинено');
         }
 
         function openAdminChatModal() {
+            updateNotifToggleUI();
             const modal = document.getElementById('adminChatModal');
             modal.classList.remove('hidden');
             modal.classList.add('flex');
@@ -1124,19 +1547,25 @@
                     `;
                 }
 
+                const isPickup = item.deliveryMethod === 'pickup';
                 return `
                     <div class="bg-zinc-950 border ${item.delivered ? 'border-emerald-500/30 opacity-75' : 'border-zinc-800'} rounded-2xl p-4 space-y-2.5">
-                        <div class="flex items-center justify-between">
-                            <span class="text-xs font-extrabold text-amber-400">Клієнт (${escapeHtml(item.contact)})</span>
-                            <span class="text-[11px] text-zinc-500">${escapeHtml(item.time)}</span>
+                        <div class="flex items-center justify-between gap-2">
+                            <div class="flex items-center gap-1.5 flex-wrap">
+                                <span class="text-[10px] font-black uppercase px-2 py-0.5 rounded-lg ${isPickup ? 'bg-emerald-500/20 text-emerald-400' : 'bg-amber-500/20 text-amber-400'}">
+                                    ${isPickup ? '🏃 Самовивіз' : '🚚 Доставка'}
+                                </span>
+                                <span class="text-xs font-extrabold text-zinc-200">${escapeHtml(item.contact)}</span>
+                            </div>
+                            <span class="text-[11px] text-zinc-500 shrink-0">${escapeHtml(item.time)}</span>
                         </div>
                         <p class="text-sm text-white font-semibold leading-snug">${escapeHtml(item.items)}</p>
                         <div class="text-xs text-zinc-400 space-y-1 pt-1 border-t border-zinc-800/80">
-                            <p>📍 ${escapeHtml(item.address)}</p>
+                            <p>${isPickup ? '🏃' : '📍'} ${escapeHtml(item.address)}</p>
                             <p>🏷️ Промокод: <span class="font-mono text-emerald-400 font-bold">${escapeHtml(item.promo)}</span> (-${item.discount || 20}%)</p>
                         </div>
                         <button type="button" onclick="toggleOrderDelivered('${item.docId}')" class="w-full py-2 rounded-xl text-xs font-bold transition-colors ${item.delivered ? 'bg-zinc-800 text-emerald-400' : 'bg-emerald-500 hover:bg-emerald-400 text-zinc-950'}">
-                            ${item.delivered ? '✓ Доставлено (повернути)' : 'Позначити як доставлене'}
+                            ${item.delivered ? (isPickup ? '✓ Видано (повернути)' : '✓ Доставлено (повернути)') : (isPickup ? 'Позначити як видане' : 'Позначити як доставлене')}
                         </button>
                     </div>
                 `;
@@ -1152,6 +1581,7 @@
         function toggleCloudSettings() {
             const box = document.getElementById('cloudSettingsBox');
             box.classList.toggle('hidden');
+            updateNotifToggleUI();
             const cfg = window.khCurrentFirebaseConfig || {};
             document.getElementById('firebaseConfigInput').value = JSON.stringify(cfg, null, 2);
         }
@@ -1167,22 +1597,31 @@
                     return;
                 }
                 safeSetStorage('kh_custom_firebase_config', JSON.stringify(parsed));
-                showToast('Конфігурацію збережено! Перезавантаження...');
-                setTimeout(() => location.reload(), 800);
-            } catch (e) {
-                showToast('Помилка: вставте коректний JSON об’єкт');
+                showToast('Налаштування хмари збережено! Оновіть сторінку.');
+            } catch (err) {
+                showToast('Помилка формату JSON');
             }
         }
 
-        // Миттєвий запуск інтерфейсу та QR-коду одразу при відкритті сторінки
-        loadLocalOrders();
-        renderMenuUI();
-        refreshCoupon(true);
-        startTimer();
-        updateBadges();
+        // Миттєвий запуск інтерфейсу та QR-коду одразу при відкритті сторінки (і повторно після повного завантаження DOM)
+        function initAppUI() {
+            refreshCoupon(true);
+            startTimer();
+            updateNotifToggleUI();
+            loadLocalOrders();
+            renderMenuUI();
+            updateBadges();
+        }
+
+        if (document.readyState === 'loading') {
+            document.addEventListener('DOMContentLoaded', initAppUI);
+        } else {
+            initAppUI();
+        }
+        window.addEventListener('load', () => refreshCoupon(true));
     </script>
 
-    <!-- Окремий модуль хмарної синхронізації Firebase (не блокує роботу QR-коду) -->
+    <!-- Окремий модуль хмарної синхронізації Firebase -->
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
         import { getAuth, signInAnonymously } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
@@ -1233,6 +1672,7 @@
                     });
                     loaded.sort((a, b) => (b.createdAt || 0) - (a.createdAt || 0));
                     deliveryOrders = loaded;
+                    checkForNewOrdersAndNotify(deliveryOrders);
                     updateBadges();
                     if (!document.getElementById('adminChatModal').classList.contains('hidden')) {
                         renderAdminChatMessages();
